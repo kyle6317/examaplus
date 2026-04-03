@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đăng nhập — Exama Lite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper: { 50:'#faf9f6', 100:'#f4f2ec', 200:'#e8e4d9', 300:'#d6d0c4' },
+            ink:   { 100:'#e0ddd7', 200:'#b8b3a8', 300:'#8c8679', 400:'#5e5a52', 500:'#3a3731', 600:'#27251f', 700:'#1a1814' },
+            accent:{ 50:'#f0f4f8', 100:'#d9e5f0', 200:'#adc5df', 300:'#7aa3c8', 400:'#4e84b4', 500:'#2d6899', 600:'#1f5280', 700:'#153d60' },
+            danger:{ 50:'#fdf0f0', 200:'#e8a0a0', 300:'#d05f5f', 400:'#b03838' },
+          },
+          fontFamily: {
+            serif: ['"Noto Serif"', 'Georgia', 'serif'],
+            sans:  ['"DM Sans"', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            paper: '0 1px 3px 0 rgba(58,55,49,0.08), 0 1px 2px -1px rgba(58,55,49,0.06)',
+            focus: '0 0 0 3px rgba(77,132,180,0.14)',
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'DM Sans', system-ui, sans-serif; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 0.7s linear infinite; }
+  </style>
+</head>
+<body class="bg-paper-50 text-ink-500 min-h-screen font-sans">
+
+<div class="flex min-h-screen">
+
+  <!-- ── Left panel (desktop only) ── -->
+  <div class="hidden md:flex flex-1 flex-col justify-center px-14 py-16 bg-paper-100 border-r border-paper-200">
+    <a href="/" class="font-serif text-[22px] font-bold text-ink-700 mb-12 no-underline">Exama Lite</a>
+    <h1 class="font-serif text-[30px] font-bold text-ink-700 leading-tight mb-4">Chào mừng quay lại</h1>
+    <p class="text-[15px] text-ink-400 leading-relaxed max-w-sm">
+      Đăng nhập để tiếp tục soạn và quản lý đề ôn tập của bạn.
+    </p>
+  </div>
+
+  <!-- ── Right panel ── -->
+  <div class="w-full md:w-[460px] md:flex-shrink-0 flex flex-col justify-start md:justify-center px-6 md:px-12 py-14">
+
+    <!-- Mobile logo -->
+    <a href="/" class="md:hidden font-serif text-[20px] font-bold text-ink-700 mb-8 no-underline">Exama Lite</a>
+
+    <h2 class="font-serif text-2xl font-bold text-ink-700 mb-1.5">Đăng nhập</h2>
+    <p class="text-sm text-ink-300 mb-8 leading-relaxed">Nhập email và mật khẩu để tiếp tục.</p>
+
+    <!-- Global error -->
+    <div id="alert-error" class="hidden gap-2.5 items-start px-4 py-3 rounded-md border border-danger-200 bg-danger-50 text-danger-400 text-sm leading-relaxed mb-5">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+      </svg>
+      <span id="alert-error-text"></span>
+    </div>
+
+    <!-- Email -->
+    <div class="flex flex-col gap-1.5 mb-4">
+      <label for="email" class="text-sm font-medium text-ink-500">Email</label>
+      <input
+        id="email" type="email" autocomplete="email"
+        placeholder="you@example.com"
+        class="w-full text-sm text-ink-500 bg-white border border-paper-300 rounded-[6px] px-3.5 py-2.5 outline-none placeholder-ink-200
+               focus:border-accent-400 focus:shadow-focus transition-all duration-150"
+      />
+      <span id="email-error" class="hidden text-xs text-danger-400"></span>
+    </div>
+
+    <!-- Password -->
+    <div class="flex flex-col gap-1.5 mb-2">
+      <label for="password" class="text-sm font-medium text-ink-500">Mật khẩu</label>
+      <input
+        id="password" type="password" autocomplete="current-password"
+        placeholder="Mật khẩu của bạn"
+        class="w-full text-sm text-ink-500 bg-white border border-paper-300 rounded-[6px] px-3.5 py-2.5 outline-none placeholder-ink-200
+               focus:border-accent-400 focus:shadow-focus transition-all duration-150"
+      />
+      <span id="password-error" class="hidden text-xs text-danger-400"></span>
+    </div>
+
+    <!-- Forgot password -->
+    <div class="flex justify-end mb-6">
+      <a href="/forgot-pass" class="text-[13px] text-accent-500 no-underline hover:underline">Quên mật khẩu?</a>
+    </div>
+
+    <!-- Submit -->
+    <button
+      id="btn-login" type="button"
+      class="w-full flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-accent-500 rounded-[6px] cursor-pointer border-0
+             hover:bg-accent-600 active:bg-accent-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 mb-5"
+    >
+      <svg id="btn-spinner" class="hidden w-4 h-4 spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="3" stroke-opacity="0.25"></circle>
+        <path fill="white" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <span id="btn-text">Đăng nhập</span>
+    </button>
+
+    <p class="text-center text-[13px] text-ink-300">
+      Chưa có tài khoản?
+      <a href="/signup" class="text-accent-500 font-medium no-underline hover:underline">Đăng ký</a>
+    </p>
+
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL      = 'https://tcdnpkrooeqagbmergne.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjZG5wa3Jvb2VxYWdibWVyZ25lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMzEyNjcsImV4cCI6MjA5MDgwNzI2N30.GggwsOhUvztkQ2h4kGEB7ol9m0hg87PRqxND4Ms8gKA';
+
+  /* ── Nếu đã đăng nhập và token còn hiệu lực, chuyển sang app ── */
+  (async function checkExistingSession() {
+    const accessToken  = localStorage.getItem('sb_access_token');
+    const refreshToken = localStorage.getItem('sb_refresh_token');
+    if (!accessToken) return;
+
+    // Kiểm tra access token với Supabase
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${accessToken}` },
+    }).catch(() => null);
+
+    if (res?.ok) {
+      window.location.replace('/app');
+      return;
+    }
+
+    // Access token hết hạn — thử refresh
+    if (refreshToken) {
+      const rRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+        body:    JSON.stringify({ refresh_token: refreshToken }),
+      }).catch(() => null);
+
+      if (rRes?.ok) {
+        const data = await rRes.json();
+        localStorage.setItem('sb_access_token',  data.access_token);
+        localStorage.setItem('sb_refresh_token', data.refresh_token);
+        localStorage.setItem('sb_user',          JSON.stringify(data.user));
+        window.location.replace('/app');
+      }
+    }
+  })();
+
+  /* ── Xử lý fragment từ Supabase magic link ── */
+  (function handleFragment() {
+    const hash = window.location.hash;
+    if (!hash || !hash.includes('access_token')) return;
+
+    const params       = new URLSearchParams(hash.slice(1)); // bỏ dấu #
+    const accessToken  = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    if (!accessToken) return;
+
+    // Xóa fragment khỏi URL ngay (token không nên hiện trên thanh địa chỉ)
+    history.replaceState(null, '', window.location.pathname);
+
+    // Decode JWT payload để lấy thông tin user (không cần verify phía client)
+    let user = null;
+    try {
+      const payload = JSON.parse(atob(accessToken.split('.')[1]));
+      user = { id: payload.sub, email: payload.email };
+    } catch { /* decode lỗi thì user = null, vẫn lưu token */ }
+
+    localStorage.setItem('sb_access_token',  accessToken);
+    localStorage.setItem('sb_refresh_token', refreshToken || '');
+    localStorage.setItem('sb_user',          JSON.stringify(user));
+
+    window.location.replace('/app');
+  })();
+
+  const emailEl    = document.getElementById('email');
+  const passEl     = document.getElementById('password');
+  const btnLogin   = document.getElementById('btn-login');
+
+  /* ── Helpers ── */
+  function fieldErr(spanId, inputEl, msg) {
+    const span = document.getElementById(spanId);
+    span.textContent = msg;
+    span.classList.toggle('hidden', !msg);
+    inputEl.classList.toggle('!border-danger-300', !!msg);
+  }
+
+  function globalErr(msg) {
+    const el = document.getElementById('alert-error');
+    document.getElementById('alert-error-text').textContent = msg;
+    el.classList.toggle('hidden', !msg);
+    el.classList.toggle('flex', !!msg);
+  }
+
+  function setLoading(on) {
+    btnLogin.disabled = on;
+    document.getElementById('btn-spinner').classList.toggle('hidden', !on);
+    document.getElementById('btn-text').textContent = on ? 'Đang đăng nhập...' : 'Đăng nhập';
+  }
+
+  /* ── Clear on input ── */
+  emailEl.addEventListener('input',  () => { fieldErr('email-error',    emailEl, ''); globalErr(''); });
+  passEl.addEventListener('input',   () => { fieldErr('password-error', passEl,  ''); globalErr(''); });
+
+  /* ── Enter key ── */
+  [emailEl, passEl].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') btnLogin.click(); }));
+
+  /* ── Login ── */
+  btnLogin.addEventListener('click', async () => {
+    const email    = emailEl.value.trim();
+    const password = passEl.value;
+
+    fieldErr('email-error',    emailEl, '');
+    fieldErr('password-error', passEl,  '');
+    globalErr('');
+
+    let ok = true;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      fieldErr('email-error', emailEl, 'Nhập địa chỉ email hợp lệ.');
+      ok = false;
+    }
+    if (!password) {
+      fieldErr('password-error', passEl, 'Nhập mật khẩu.');
+      ok = false;
+    }
+    if (!ok) return;
+
+    setLoading(true);
+    try {
+      const res  = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method:  'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Supabase trả "Invalid login credentials" khi sai email/pass
+        const msg = data?.error_description || data?.msg || data?.message || 'Email hoặc mật khẩu không đúng.';
+        globalErr(msg);
+        return;
+      }
+
+      // Lưu session vào localStorage
+      localStorage.setItem('sb_access_token',  data.access_token);
+      localStorage.setItem('sb_refresh_token', data.refresh_token);
+      localStorage.setItem('sb_user',          JSON.stringify(data.user));
+
+      window.location.href = '/app';
+    } catch {
+      globalErr('Không thể kết nối. Kiểm tra mạng và thử lại.');
+    } finally {
+      setLoading(false);
+    }
+  });
+</script>
+</body>
+</html>

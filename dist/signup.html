@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đăng ký — Exama Lite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper: { 50:'#faf9f6', 100:'#f4f2ec', 200:'#e8e4d9', 300:'#d6d0c4' },
+            ink:   { 100:'#e0ddd7', 200:'#b8b3a8', 300:'#8c8679', 400:'#5e5a52', 500:'#3a3731', 600:'#27251f', 700:'#1a1814' },
+            accent:{ 50:'#f0f4f8', 100:'#d9e5f0', 200:'#adc5df', 300:'#7aa3c8', 400:'#4e84b4', 500:'#2d6899', 600:'#1f5280', 700:'#153d60' },
+            danger:{ 50:'#fdf0f0', 100:'#f5d5d5', 200:'#e8a0a0', 300:'#d05f5f', 400:'#b03838', 500:'#8a2020' },
+            success:{ 50:'#f0f7f0', 200:'#a0cfa0', 500:'#256825' },
+          },
+          fontFamily: {
+            serif: ['"Noto Serif"', 'Georgia', 'serif'],
+            sans:  ['"DM Sans"', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            paper:   '0 1px 3px 0 rgba(58,55,49,0.08), 0 1px 2px -1px rgba(58,55,49,0.06)',
+            focus:   '0 0 0 3px rgba(77,132,180,0.14)',
+            'focus-d':'0 0 0 3px rgba(208,95,95,0.12)',
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'DM Sans', system-ui, sans-serif; }
+    input[type="checkbox"] { appearance: none; -webkit-appearance: none; position: relative; cursor: pointer; }
+    input[type="checkbox"]:checked { background-color: #2d6899; border-color: #2d6899; }
+    input[type="checkbox"]:checked::after {
+      content: '';
+      position: absolute;
+      left: 2px; top: 0px;
+      width: 9px; height: 5px;
+      border-left: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: rotate(-45deg);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 0.7s linear infinite; }
+  </style>
+</head>
+<body class="bg-paper-50 text-ink-500 min-h-screen font-sans">
+
+<div class="flex min-h-screen">
+
+  <!-- ── Left panel (desktop only) ── -->
+  <div class="hidden md:flex flex-1 flex-col justify-center px-14 py-16 bg-paper-100 border-r border-paper-200">
+    <a href="/" class="font-serif text-[22px] font-bold text-ink-700 mb-12 no-underline">Exama Lite</a>
+    <h1 class="font-serif text-[30px] font-bold text-ink-700 leading-tight mb-4">
+      Chào mừng đến với<br/>Exama Lite
+    </h1>
+    <p class="text-[15px] text-ink-400 leading-relaxed mb-10 max-w-sm">
+      Tạo và chia sẻ đề ôn tập trực tuyến. Không cần cài đặt, không cần phần mềm — chỉ cần một tài khoản.
+    </p>
+    <ul class="list-none p-0 m-0 flex flex-col gap-3">
+      <li class="flex items-start gap-2.5 text-sm text-ink-400 leading-relaxed">
+        <span class="mt-[7px] w-1.5 h-1.5 rounded-full bg-accent-400 flex-shrink-0"></span>
+        Tải lên PDF hoặc DOCX để tạo câu hỏi nhanh chóng
+      </li>
+      <li class="flex items-start gap-2.5 text-sm text-ink-400 leading-relaxed">
+        <span class="mt-[7px] w-1.5 h-1.5 rounded-full bg-accent-400 flex-shrink-0"></span>
+        Chia sẻ link làm bài — không yêu cầu học sinh đăng nhập
+      </li>
+      <li class="flex items-start gap-2.5 text-sm text-ink-400 leading-relaxed">
+        <span class="mt-[7px] w-1.5 h-1.5 rounded-full bg-accent-400 flex-shrink-0"></span>
+        Chế độ học tập và kiểm thử trong cùng một đề
+      </li>
+    </ul>
+  </div>
+
+  <!-- ── Right panel ── -->
+  <div class="w-full md:w-[460px] md:flex-shrink-0 flex flex-col justify-start md:justify-center px-6 md:px-12 py-14">
+
+    <!-- Mobile logo -->
+    <a href="/" class="md:hidden font-serif text-[20px] font-bold text-ink-700 mb-8 no-underline">Exama Lite</a>
+
+    <!-- ═══ Step 1: Form ═══ -->
+    <div id="step-form">
+      <h2 class="font-serif text-2xl font-bold text-ink-700 mb-1.5">Tạo tài khoản</h2>
+      <p class="text-sm text-ink-300 mb-8 leading-relaxed">Điền thông tin bên dưới để bắt đầu.</p>
+
+      <!-- Global error alert -->
+      <div id="alert-error" class="hidden gap-2.5 items-start px-4 py-3 rounded-md border border-danger-200 bg-danger-50 text-danger-400 text-sm leading-relaxed mb-5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+        </svg>
+        <span id="alert-error-text"></span>
+      </div>
+
+      <!-- Email -->
+      <div class="flex flex-col gap-1.5 mb-4">
+        <label for="email" class="text-sm font-medium text-ink-500">
+          Email <span class="text-danger-300">*</span>
+        </label>
+        <input
+          id="email" type="email" autocomplete="email"
+          placeholder="you@example.com"
+          class="w-full text-sm text-ink-500 bg-white border border-paper-300 rounded-[6px] px-3.5 py-2.5 outline-none placeholder-ink-200
+                 focus:border-accent-400 focus:shadow-focus transition-all duration-150"
+        />
+        <span id="email-error" class="hidden text-xs text-danger-400"></span>
+      </div>
+
+      <!-- Password -->
+      <div class="flex flex-col gap-1.5 mb-4">
+        <label for="password" class="text-sm font-medium text-ink-500">
+          Mật khẩu <span class="text-danger-300">*</span>
+        </label>
+        <input
+          id="password" type="password" autocomplete="new-password"
+          placeholder="Ít nhất 8 ký tự"
+          class="w-full text-sm text-ink-500 bg-white border border-paper-300 rounded-[6px] px-3.5 py-2.5 outline-none placeholder-ink-200
+                 focus:border-accent-400 focus:shadow-focus transition-all duration-150"
+        />
+        <span id="password-error" class="hidden text-xs text-danger-400"></span>
+      </div>
+
+      <!-- Confirm password -->
+      <div class="flex flex-col gap-1.5 mb-5">
+        <label for="password-confirm" class="text-sm font-medium text-ink-500">
+          Nhập lại mật khẩu <span class="text-danger-300">*</span>
+        </label>
+        <input
+          id="password-confirm" type="password" autocomplete="new-password"
+          placeholder="Nhập lại mật khẩu"
+          class="w-full text-sm text-ink-500 bg-white border border-paper-300 rounded-[6px] px-3.5 py-2.5 outline-none placeholder-ink-200
+                 focus:border-accent-400 focus:shadow-focus transition-all duration-150"
+        />
+        <span id="confirm-error" class="hidden text-xs text-danger-400"></span>
+      </div>
+
+      <!-- Terms checkbox -->
+      <div class="flex items-start gap-2.5 mb-1.5">
+        <input
+          id="terms" type="checkbox"
+          class="w-4 h-4 mt-0.5 border-[1.5px] border-ink-200 rounded-[3px] bg-white flex-shrink-0"
+        />
+        <label for="terms" class="text-[13px] text-ink-400 leading-relaxed cursor-pointer select-none">
+          Tôi đồng ý với
+          <a href="/terms" class="text-accent-500 no-underline hover:underline">Điều khoản sử dụng</a>
+          và
+          <a href="/privacy" class="text-accent-500 no-underline hover:underline">Chính sách bảo mật</a>
+        </label>
+      </div>
+      <span id="terms-error" class="hidden text-xs text-danger-400 mb-5 block"></span>
+
+      <!-- Submit -->
+      <button
+        id="btn-signup" type="button"
+        class="w-full flex items-center justify-center gap-2 mt-4 px-5 py-2.5 text-sm font-semibold text-white bg-accent-500 rounded-[6px] cursor-pointer
+               hover:bg-accent-600 active:bg-accent-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 mb-5 border-0"
+      >
+        <svg id="btn-spinner" class="hidden w-4 h-4 spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" stroke="white" stroke-width="3" stroke-opacity="0.25"></circle>
+          <path fill="white" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        <span id="btn-text">Tạo tài khoản</span>
+      </button>
+
+      <p class="text-center text-[13px] text-ink-300">
+        Đã có tài khoản?
+        <a href="/login" class="text-accent-500 font-medium no-underline hover:underline">Đăng nhập</a>
+      </p>
+    </div>
+
+    <!-- ═══ Step 2: Confirm email ═══ -->
+    <div id="step-confirm" class="hidden">
+      <div class="w-12 h-12 rounded-full bg-accent-100 flex items-center justify-center mb-5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-accent-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/>
+        </svg>
+      </div>
+
+      <h2 class="font-serif text-[22px] font-bold text-ink-700 mb-2">Kiểm tra hộp thư của bạn</h2>
+      <p class="text-sm text-ink-400 leading-relaxed mb-7">
+        Chúng tôi đã gửi link xác nhận đến
+        <strong id="confirm-email-display" class="text-ink-600 font-semibold"></strong>.
+        Nhấn vào link trong email để kích hoạt tài khoản.
+      </p>
+
+      <!-- Provider button(s) injected by JS -->
+      <div id="email-provider-btns" class="flex flex-col gap-2.5 mb-7"></div>
+
+      <p class="text-xs text-ink-300 leading-relaxed text-center pt-5 border-t border-paper-200">
+        Không thấy email? Kiểm tra thư mục Spam hoặc Promotions.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL      = 'https://tcdnpkrooeqagbmergne.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjZG5wa3Jvb2VxYWdibWVyZ25lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMzEyNjcsImV4cCI6MjA5MDgwNzI2N30.GggwsOhUvztkQ2h4kGEB7ol9m0hg87PRqxND4Ms8gKA';
+
+  /* ── Email provider map ── */
+  const PROVIDERS = [
+    {
+      label: 'Mở Gmail',
+      test:  /@gmail\.com$/i,
+      url:   'https://mail.google.com/',
+      svg:   `<svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#EA4335" d="M6 10h36v28H6z"/><path fill="#fff" d="M6 10l18 13L42 10"/><path fill="#FBBC05" d="M6 10v28l10-14z"/><path fill="#34A853" d="M42 10v28L32 24z"/><path fill="#4285F4" d="M6 38l16-14 2 1.4 2-1.4 16 14z"/><path fill="#EA4335" d="M6 10l18 13L42 10H6z"/></svg>`
+    },
+    {
+      label: 'Mở Outlook',
+      test:  /@(outlook|hotmail|live|msn)\./i,
+      url:   'https://outlook.live.com/mail/',
+      svg:   `<svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="4" fill="#0078D4"/><rect x="6" y="14" width="22" height="20" rx="1" fill="#fff"/><ellipse cx="17" cy="24" rx="6" ry="5.5" fill="#0078D4"/><ellipse cx="17" cy="24" rx="4" ry="4" fill="#fff"/><path fill="#fff" d="M28 14l14 9-14 9V14z"/></svg>`
+    },
+    {
+      label: 'Mở Proton Mail',
+      test:  /@(proton\.me|protonmail\.com)$/i,
+      url:   'https://mail.proton.me/',
+      svg:   `<svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="4" fill="#6D4AFF"/><path fill="#fff" d="M10 13h17c5.5 0 9 3.2 9 8s-3.5 8-9 8h-9v6H10V13zm8 11h8c2.5 0 4-1.3 4-3s-1.5-3-4-3h-8v6z"/></svg>`
+    },
+    {
+      label: 'Mở Yahoo Mail',
+      test:  /@(yahoo|ymail)\./i,
+      url:   'https://mail.yahoo.com/',
+      svg:   `<svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="4" fill="#6001D2"/><path fill="#fff" d="M8 13h12l4 9 4-9h12L28 29v9H20v-9L8 13z"/></svg>`
+    },
+    {
+      label: 'Mở iCloud Mail',
+      test:  /@(icloud|me|mac)\.com$/i,
+      url:   'https://www.icloud.com/mail/',
+      svg:   `<svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="4" fill="#1C1C1E"/><path fill="#fff" d="M35 30.5c3 0 5.5-2.4 5.5-5.5 0-2.8-2-5.1-4.7-5.5C35 16.1 32.2 13.5 29 13.5c-1.5 0-2.9.5-4 1.4-1-1-2.4-1.6-3.9-1.6C17.8 13.3 15 16.2 15 19.8c0 .3 0 .6.1.9C13 21.5 11.5 23.3 11.5 25.5c0 2.8 2.2 5 5 5H35z"/></svg>`
+    },
+  ];
+
+  /* ── DOM refs ── */
+  const emailEl   = document.getElementById('email');
+  const passEl    = document.getElementById('password');
+  const confEl    = document.getElementById('password-confirm');
+  const termsEl   = document.getElementById('terms');
+  const btnSignup = document.getElementById('btn-signup');
+
+  /* ── Error helpers ── */
+  function fieldErr(spanId, inputEl, msg) {
+    const span = document.getElementById(spanId);
+    if (msg) {
+      span.textContent = msg;
+      span.classList.remove('hidden');
+      inputEl.classList.add('!border-danger-300');
+    } else {
+      span.textContent = '';
+      span.classList.add('hidden');
+      inputEl.classList.remove('!border-danger-300');
+    }
+  }
+
+  function termsErr(msg) {
+    const span = document.getElementById('terms-error');
+    if (msg) { span.textContent = msg; span.classList.remove('hidden'); }
+    else      { span.textContent = ''; span.classList.add('hidden');    }
+  }
+
+  function globalErr(msg) {
+    const el = document.getElementById('alert-error');
+    document.getElementById('alert-error-text').textContent = msg;
+    if (msg) { el.classList.remove('hidden'); el.classList.add('flex'); }
+    else      { el.classList.add('hidden');   el.classList.remove('flex'); }
+  }
+
+  /* ── Clear on input ── */
+  emailEl.addEventListener('input',  () => fieldErr('email-error',   emailEl, ''));
+  passEl.addEventListener('input',   () => fieldErr('password-error', passEl, ''));
+  confEl.addEventListener('input',   () => fieldErr('confirm-error',  confEl, ''));
+  termsEl.addEventListener('change', () => termsErr(''));
+
+  /* ── Loading state ── */
+  function setLoading(on) {
+    btnSignup.disabled = on;
+    document.getElementById('btn-spinner').classList.toggle('hidden', !on);
+    document.getElementById('btn-text').textContent = on ? 'Đang xử lý...' : 'Tạo tài khoản';
+  }
+
+  /* ── Submit ── */
+  btnSignup.addEventListener('click', async () => {
+    const email    = emailEl.value.trim();
+    const password = passEl.value;
+    const confirm  = confEl.value;
+    const agreed   = termsEl.checked;
+
+    // Reset all errors
+    fieldErr('email-error',    emailEl, '');
+    fieldErr('password-error', passEl,  '');
+    fieldErr('confirm-error',  confEl,  '');
+    termsErr('');
+    globalErr('');
+
+    let ok = true;
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      fieldErr('email-error', emailEl, 'Nhập địa chỉ email hợp lệ.');
+      ok = false;
+    }
+    if (password.length < 8) {
+      fieldErr('password-error', passEl, 'Mật khẩu cần ít nhất 8 ký tự.');
+      ok = false;
+    }
+    if (password !== confirm) {
+      fieldErr('confirm-error', confEl, 'Mật khẩu nhập lại không khớp.');
+      ok = false;
+    }
+    if (!agreed) {
+      termsErr('Bạn cần đồng ý với điều khoản để tiếp tục.');
+      ok = false;
+    }
+    if (!ok) return;
+
+    setLoading(true);
+    try {
+      const res  = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+        body:    JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        globalErr(data?.msg || data?.error_description || data?.message || 'Đăng ký không thành công. Vui lòng thử lại.');
+        return;
+      }
+
+      showConfirm(email);
+    } catch {
+      globalErr('Không thể kết nối. Kiểm tra mạng và thử lại.');
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  /* ── Show confirm step ── */
+  function showConfirm(email) {
+    document.getElementById('step-form').classList.add('hidden');
+    document.getElementById('step-confirm').classList.remove('hidden');
+    document.getElementById('confirm-email-display').textContent = email;
+
+    const container = document.getElementById('email-provider-btns');
+    container.innerHTML = '';
+
+    const provider = PROVIDERS.find(p => p.test.test(email));
+    if (provider) {
+      // same-tab redirect — use <a> with no target="_blank"
+      const a = document.createElement('a');
+      a.href = provider.url;
+      // no target attribute → same tab
+      a.className = 'flex items-center gap-2.5 px-3.5 py-2.5 bg-white border border-paper-300 rounded-[6px] text-sm font-medium text-ink-500 no-underline transition-all duration-150 hover:border-accent-300 hover:shadow-paper';
+      a.innerHTML = provider.svg + `<span>${provider.label}</span>`;
+      container.appendChild(a);
+    }
+  }
+</script>
+</body>
+</html>
