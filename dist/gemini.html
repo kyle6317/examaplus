@@ -1,61 +1,338 @@
-<!DOCTYPE html><html lang="vi">
+<!DOCTYPE html>
+<html lang="vi">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gemini không khả dụng</title>  <!-- Tailwind CDN -->  <script src="https://cdn.tailwindcss.com"></script>  <!-- Fonts -->  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Noto+Serif:wght@700&display=swap" rel="stylesheet">  <script>
+  <title>Document Generator — Exama Lite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: {
-            sans: ['DM Sans', 'sans-serif'],
-            serif: ['Noto Serif', 'serif'],
-          },
           colors: {
-            paper: {
-              50: '#faf9f6',
-              100: '#f4f2ec',
-              200: '#e8e4d9',
-            },
-            ink: {
-              500: '#3a3731',
-              600: '#27251f',
-            },
-            accent: {
-              500: '#2d6899',
-              600: '#1f5280',
-            }
-          }
+            paper: { 50:'#faf9f6', 100:'#f4f2ec', 200:'#e8e4d9', 300:'#d6d0c4' },
+            ink:   { 100:'#e0ddd7', 200:'#b8b3a8', 300:'#8c8679', 400:'#5e5a52', 500:'#3a3731', 600:'#27251f', 700:'#1a1814' },
+            accent:{ 50:'#f0f4f8', 100:'#d9e5f0', 200:'#adc5df', 300:'#7aa3c8', 400:'#4e84b4', 500:'#2d6899', 600:'#1f5280', 700:'#153d60' },
+            danger:{ 50:'#fdf0f0', 200:'#e8a0a0', 300:'#d05f5f', 400:'#b03838' },
+            success:{ 50:'#f0faf4', 200:'#9dd5b4', 400:'#2e8b57' },
+          },
+          fontFamily: {
+            serif: ['"Noto Serif"', 'Georgia', 'serif'],
+            sans:  ['"DM Sans"', 'system-ui', 'sans-serif'],
+            mono:  ['"DM Mono"', 'monospace'],
+          },
+          boxShadow: {
+            paper: '0 1px 3px 0 rgba(58,55,49,0.08), 0 1px 2px -1px rgba(58,55,49,0.06)',
+            focus: '0 0 0 3px rgba(77,132,180,0.14)',
+          },
         }
       }
     }
-  </script></head><body class="bg-paper-50 text-ink-500 font-sans min-h-screen flex items-center justify-center p-4">  <div class="bg-white border border-paper-200 rounded-md shadow-md p-8 max-w-md w-full text-center"><h1 class="font-serif text-2xl text-ink-600 mb-3">
-  Gemini hiện không khả dụng
-</h1>
+  </script>
+  <style>
+    body { font-family: 'DM Sans', system-ui, sans-serif; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 0.7s linear infinite; }
 
-<p class="text-sm text-[#5e5a52] leading-relaxed mb-6">
-  Tính năng Gemini đang tạm thời không thể sử dụng.
-  Vui lòng thử lại sau hoặc quay về trang khác.
-</p>
+    /* Drop zone states */
+    .drop-active { border-color: #4e84b4 !important; background-color: #f0f4f8 !important; }
 
-<div class="flex gap-3 justify-center flex-wrap">
-  <a href="/" 
-     class="px-4 py-2 rounded-md text-sm bg-paper-100 border border-paper-200 hover:bg-paper-200 transition">
-    Quay về Trang chủ
-  </a>
+    /* Markdown output styling */
+    #markdown-output {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
 
-  <a href="/app" 
-     class="px-4 py-2 rounded-md text-sm text-white bg-accent-500 hover:bg-accent-600 transition">
-    Quay về Dashboard
-  </a>
-</div>
+    /* Char counter color */
+    .char-warn  { color: #d05f5f; }
+    .char-ok    { color: #8c8679; }
+  </style>
+</head>
+<body class="bg-paper-50 text-ink-500 min-h-screen font-sans">
 
-<div class="mt-5 text-xs">
-  Cần hỗ trợ gấp?
-  <a href="mailto:nguyenhuuhoa@proton.me" 
-     class="text-accent-500 hover:underline ml-1">
-    Liên hệ hỗ trợ
-  </a>
-</div>
+<!-- ── Top bar ── -->
+<header class="border-b border-paper-200 bg-paper-100 px-6 py-3 flex items-center justify-between">
+  <a href="/" class="font-serif text-[18px] font-bold text-ink-700 no-underline">Exama Lite</a>
+  <span class="text-xs text-ink-300 bg-paper-200 px-2 py-0.5 rounded font-mono">document-generator · test</span>
+</header>
 
-  </div></body>
+<main class="max-w-3xl mx-auto px-4 py-10">
+
+  <h1 class="font-serif text-2xl font-bold text-ink-700 mb-1">Document Generator</h1>
+  <p class="text-sm text-ink-300 mb-8">Upload file <code class="text-xs bg-paper-200 px-1 py-0.5 rounded">.docx</code> — nhận về Markdown có cấu trúc từ Gemini.</p>
+
+  <!-- Auth token input -->
+  <div class="mb-6 p-4 rounded-lg border border-paper-200 bg-white shadow-paper">
+    <label class="block text-xs font-semibold text-ink-400 uppercase tracking-wide mb-2">Access Token (từ localStorage)</label>
+    <div class="flex gap-2">
+      <input
+        id="token-input"
+        type="password"
+        placeholder="Paste access token hoặc bấm Auto-fill"
+        class="flex-1 text-xs font-mono text-ink-500 bg-paper-50 border border-paper-300 rounded-[6px] px-3 py-2 outline-none
+               focus:border-accent-400 focus:shadow-focus transition-all duration-150"
+      />
+      <button
+        id="btn-autofill"
+        class="px-3 py-2 text-xs font-semibold text-accent-600 bg-accent-50 border border-accent-200 rounded-[6px]
+               hover:bg-accent-100 transition-colors duration-150 whitespace-nowrap"
+      >
+        Auto-fill
+      </button>
+    </div>
+    <p id="token-status" class="mt-1.5 text-xs text-ink-300 hidden"></p>
+  </div>
+
+  <!-- Drop zone -->
+  <div
+    id="drop-zone"
+    class="relative mb-4 border-2 border-dashed border-paper-300 rounded-xl bg-white p-10 text-center cursor-pointer
+           hover:border-accent-300 hover:bg-accent-50 transition-all duration-200"
+  >
+    <input id="file-input" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+    <div id="drop-idle">
+      <svg class="w-8 h-8 text-ink-200 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+      </svg>
+      <p class="text-sm font-medium text-ink-400">Kéo thả file <span class="text-accent-500">.docx</span> vào đây</p>
+      <p class="text-xs text-ink-300 mt-1">hoặc click để chọn file</p>
+    </div>
+    <div id="drop-selected" class="hidden">
+      <svg class="w-7 h-7 text-success-400 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+      </svg>
+      <p id="file-name" class="text-sm font-semibold text-ink-600"></p>
+      <p id="char-count" class="text-xs mt-1 char-ok"></p>
+    </div>
+  </div>
+
+  <!-- Error / warning -->
+  <div id="alert-error" class="hidden gap-2.5 items-start px-4 py-3 rounded-md border border-danger-200 bg-danger-50 text-danger-400 text-sm leading-relaxed mb-4">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+    </svg>
+    <span id="alert-error-text"></span>
+  </div>
+
+  <!-- Submit button -->
+  <button
+    id="btn-generate"
+    disabled
+    class="w-full flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-accent-500 rounded-[6px] cursor-pointer border-0
+           hover:bg-accent-600 active:bg-accent-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150 mb-8"
+  >
+    <svg id="btn-spinner" class="hidden w-4 h-4 spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" stroke="white" stroke-width="3" stroke-opacity="0.25"></circle>
+      <path fill="white" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+    </svg>
+    <span id="btn-text">Tạo tài liệu</span>
+  </button>
+
+  <!-- Output -->
+  <div id="output-section" class="hidden">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-serif text-base font-bold text-ink-700">Kết quả Markdown</h2>
+      <button
+        id="btn-copy"
+        class="flex items-center gap-1.5 text-xs font-medium text-accent-500 hover:text-accent-700 transition-colors duration-150"
+      >
+        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
+        </svg>
+        <span id="copy-label">Copy</span>
+      </button>
+    </div>
+    <div class="rounded-xl border border-paper-200 bg-white shadow-paper overflow-hidden">
+      <pre id="markdown-output" class="p-5 text-ink-500 overflow-x-auto"></pre>
+    </div>
+  </div>
+
+</main>
+
+<!-- Mammoth.js for docx → text -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
+
+<script>
+  const SUPABASE_EDGE_URL = 'https://tcdnpkrooeqagbmergne.supabase.co/functions/v1/document-generator';
+  const MAX_CHARS = 80_000;
+
+  // ── Elements ──────────────────────────────────────────────────────────────
+  const tokenInput    = document.getElementById('token-input');
+  const btnAutofill   = document.getElementById('btn-autofill');
+  const tokenStatus   = document.getElementById('token-status');
+  const dropZone      = document.getElementById('drop-zone');
+  const fileInput     = document.getElementById('file-input');
+  const dropIdle      = document.getElementById('drop-idle');
+  const dropSelected  = document.getElementById('drop-selected');
+  const fileNameEl    = document.getElementById('file-name');
+  const charCountEl   = document.getElementById('char-count');
+  const btnGenerate   = document.getElementById('btn-generate');
+  const btnSpinner    = document.getElementById('btn-spinner');
+  const btnText       = document.getElementById('btn-text');
+  const alertError    = document.getElementById('alert-error');
+  const alertErrorTxt = document.getElementById('alert-error-text');
+  const outputSection = document.getElementById('output-section');
+  const markdownOut   = document.getElementById('markdown-output');
+  const btnCopy       = document.getElementById('btn-copy');
+  const copyLabel     = document.getElementById('copy-label');
+
+  let parsedText = '';   // raw text extracted from docx
+  let currentFile = null;
+
+  // ── Auto-fill token ───────────────────────────────────────────────────────
+  btnAutofill.addEventListener('click', () => {
+    const token = localStorage.getItem('sb_access_token');
+    if (token) {
+      tokenInput.value = token;
+      showTokenStatus('✓ Đã điền từ localStorage', false);
+    } else {
+      showTokenStatus('Không tìm thấy token trong localStorage — hãy đăng nhập trước.', true);
+    }
+  });
+
+  tokenInput.addEventListener('input', () => {
+    tokenStatus.classList.add('hidden');
+    updateGenerateBtn();
+  });
+
+  function showTokenStatus(msg, isError) {
+    tokenStatus.textContent = msg;
+    tokenStatus.className = `mt-1.5 text-xs ${isError ? 'text-danger-400' : 'text-success-400'}`;
+    tokenStatus.classList.remove('hidden');
+    updateGenerateBtn();
+  }
+
+  // ── Drop zone ─────────────────────────────────────────────────────────────
+  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drop-active'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drop-active'));
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drop-active');
+    const file = e.dataTransfer?.files?.[0];
+    if (file) handleFile(file);
+  });
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files?.[0]) handleFile(fileInput.files[0]);
+  });
+
+  async function handleFile(file) {
+    if (!file.name.endsWith('.docx')) {
+      showError('Chỉ hỗ trợ file .docx');
+      return;
+    }
+
+    clearError();
+    parsedText = '';
+    currentFile = file;
+
+    try {
+      // Convert docx → plain text via Mammoth
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      parsedText = result.value;
+
+      // Hiển thị tên file + số ký tự
+      fileNameEl.textContent = file.name;
+      const len = parsedText.length;
+      const isOver = len > MAX_CHARS;
+      charCountEl.textContent = `${len.toLocaleString()} / ${MAX_CHARS.toLocaleString()} ký tự${isOver ? ' — QUÁ DÀI' : ''}`;
+      charCountEl.className = `text-xs mt-1 ${isOver ? 'char-warn' : 'char-ok'}`;
+
+      dropIdle.classList.add('hidden');
+      dropSelected.classList.remove('hidden');
+
+      if (isOver) {
+        showError(`Văn bản quá dài (${len.toLocaleString()} ký tự). Tối đa ${MAX_CHARS.toLocaleString()} ký tự.`);
+      }
+    } catch (err) {
+      showError('Không thể đọc file docx: ' + err.message);
+    }
+
+    updateGenerateBtn();
+  }
+
+  // ── Generate ──────────────────────────────────────────────────────────────
+  btnGenerate.addEventListener('click', async () => {
+    const token = tokenInput.value.trim();
+    if (!token) { showError('Nhập access token trước.'); return; }
+    if (!parsedText) { showError('Chọn file trước.'); return; }
+    if (parsedText.length > MAX_CHARS) {
+      showError(`Văn bản quá dài. Tối đa ${MAX_CHARS.toLocaleString()} ký tự.`);
+      return;
+    }
+
+    clearError();
+    setLoading(true);
+    outputSection.classList.add('hidden');
+
+    try {
+      const res = await fetch(SUPABASE_EDGE_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ text: parsedText }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showError(data?.error || `Lỗi server (${res.status})`);
+        return;
+      }
+
+      markdownOut.textContent = data.markdown;
+      outputSection.classList.remove('hidden');
+      outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      showError('Không thể kết nối tới server. Kiểm tra mạng và thử lại.');
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  // ── Copy ──────────────────────────────────────────────────────────────────
+  btnCopy.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(markdownOut.textContent);
+      copyLabel.textContent = 'Đã copy!';
+      setTimeout(() => { copyLabel.textContent = 'Copy'; }, 2000);
+    } catch {
+      copyLabel.textContent = 'Lỗi copy';
+    }
+  });
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function setLoading(on) {
+    btnGenerate.disabled = on;
+    btnSpinner.classList.toggle('hidden', !on);
+    btnText.textContent = on ? 'Đang xử lý...' : 'Tạo tài liệu';
+  }
+
+  function showError(msg) {
+    alertErrorTxt.textContent = msg;
+    alertError.classList.remove('hidden');
+    alertError.classList.add('flex');
+  }
+
+  function clearError() {
+    alertError.classList.add('hidden');
+    alertError.classList.remove('flex');
+    alertErrorTxt.textContent = '';
+  }
+
+  function updateGenerateBtn() {
+    const hasToken = tokenInput.value.trim().length > 0;
+    const hasText  = parsedText.length > 0 && parsedText.length <= MAX_CHARS;
+    btnGenerate.disabled = !(hasToken && hasText);
+  }
+</script>
+</body>
 </html>
