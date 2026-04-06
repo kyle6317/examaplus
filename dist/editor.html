@@ -3,9 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Soạn đề — Exama Lite</title>
+  <title>Soạn đề — Exama Plus</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+  <!-- Tiptap via ESM CDN – used for docs editor -->
+  <script type="importmap">
+  {
+    "imports": {
+      "@tiptap/core": "https://esm.sh/@tiptap/core@2.3.0",
+      "@tiptap/extension-document": "https://esm.sh/@tiptap/extension-document@2.3.0",
+      "@tiptap/extension-paragraph": "https://esm.sh/@tiptap/extension-paragraph@2.3.0",
+      "@tiptap/extension-text": "https://esm.sh/@tiptap/extension-text@2.3.0",
+      "@tiptap/extension-heading": "https://esm.sh/@tiptap/extension-heading@2.3.0",
+      "@tiptap/extension-bold": "https://esm.sh/@tiptap/extension-bold@2.3.0",
+      "@tiptap/extension-italic": "https://esm.sh/@tiptap/extension-italic@2.3.0",
+      "@tiptap/extension-bullet-list": "https://esm.sh/@tiptap/extension-bullet-list@2.3.0",
+      "@tiptap/extension-list-item": "https://esm.sh/@tiptap/extension-list-item@2.3.0",
+      "@tiptap/extension-placeholder": "https://esm.sh/@tiptap/extension-placeholder@2.3.0",
+      "@tiptap/extension-history": "https://esm.sh/@tiptap/extension-history@2.3.0"
+    }
+  }
+  </script>
   <script>
     tailwind.config = {
       theme: {
@@ -199,7 +218,176 @@
 
     /* Blank placeholder highlight */
     .blank-preview { background: #d9e5f0; border-radius: 3px; padding: 1px 4px; font-family: monospace; font-size: 13px; }
+
+    /* ── Main Tabs ── */
+    .main-tab-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 8px 8px 0 0;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      border: 1px solid transparent; border-bottom: none;
+      transition: all 0.15s ease; color: #8c8679; background: transparent;
+    }
+    .main-tab-btn.active {
+      color: #2d6899; background: #faf9f6;
+      border-color: #e8e4d9; border-bottom-color: #faf9f6;
+      margin-bottom: -1px; position: relative; z-index: 2;
+    }
+    .main-tab-btn:not(.active):hover { color: #5e5a52; background: #f4f2ec; }
+
+    /* ── Docs/Mind-map sub-tabs ── */
+    .sub-tab-btn {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 14px; font-size: 12px; font-weight: 500;
+      border-radius: 6px; cursor: pointer; transition: all 0.15s;
+      color: #8c8679; background: transparent; border: 1px solid transparent;
+    }
+    .sub-tab-btn.active { color: #2d6899; background: #d9e5f0; border-color: #adc5df; }
+    .sub-tab-btn:not(.active):hover { color: #5e5a52; background: #f4f2ec; }
+
+    /* ── Tiptap editor ── */
+    .tiptap-toolbar {
+      display: flex; gap: 4px; padding: 6px 10px;
+      border-bottom: 1px solid #e8e4d9; background: #f4f2ec;
+      border-radius: 8px 8px 0 0; flex-wrap: wrap;
+    }
+    .tiptap-toolbar button {
+      padding: 3px 8px; border-radius: 4px; border: 1px solid transparent;
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      color: #5e5a52; background: transparent; transition: all 0.12s;
+    }
+    .tiptap-toolbar button:hover { background: #e8e4d9; }
+    .tiptap-toolbar button.active-fmt { background: #d9e5f0; border-color: #adc5df; color: #1f5280; }
+    .tiptap-toolbar .sep { width: 1px; background: #d6d0c4; margin: 2px 4px; }
+
+    .tiptap-content {
+      min-height: 280px; padding: 16px; outline: none;
+      font-size: 14px; line-height: 1.75; color: #3a3731;
+      overflow-y: auto;
+    }
+    .tiptap-content h1 { font-family: 'Noto Serif', serif; font-size: 1.4em; font-weight: 700; color: #1a1814; margin: 12px 0 6px; }
+    .tiptap-content h2 { font-family: 'Noto Serif', serif; font-size: 1.15em; font-weight: 600; color: #27251f; margin: 10px 0 4px; }
+    .tiptap-content h3 { font-family: 'Noto Serif', serif; font-size: 1em; font-weight: 600; color: #3a3731; margin: 8px 0 4px; }
+    .tiptap-content p { margin: 4px 0; }
+    .tiptap-content ul, .tiptap-content ol { padding-left: 20px; margin: 4px 0; }
+    .tiptap-content li { margin: 2px 0; }
+    .tiptap-content strong { font-weight: 600; }
+    .tiptap-content em { font-style: italic; }
+    .tiptap-content .ProseMirror-focused { outline: none; }
+    .tiptap-content p.is-editor-empty:first-child::before {
+      content: attr(data-placeholder); color: #b8b3a8; pointer-events: none;
+    }
+
+    /* ── Mind map panel ── */
+    #mindmap-container {
+      position: relative; background: #faf9f6; border-radius: 0 0 8px 8px;
+      overflow: hidden;
+    }
+    #mindmap-inner {
+      width: 100%; height: 460px; background: #faf9f6 !important;
+    }
+    #mindmap-inner .jsmind-inner {
+      background: #faf9f6 !important;
+    }
+    #mindmap-inner jmnode {
+      font-family: 'DM Sans', sans-serif !important;
+      font-size: 12.5px !important;
+      border-radius: 7px !important;
+      cursor: pointer !important;
+      border: 1px solid #d6d0c4 !important;
+      box-shadow: 0 1px 3px rgba(58,55,49,0.10) !important;
+      transition: box-shadow .15s, border-color .15s !important;
+    }
+    #mindmap-inner jmnode:hover {
+      box-shadow: 0 2px 8px rgba(45,104,153,0.18) !important;
+      border-color: #7aa3c8 !important;
+    }
+    #mindmap-inner jmnode.selected {
+      box-shadow: 0 0 0 2px #2d6899 !important;
+      border-color: #2d6899 !important;
+    }
+    #mindmap-inner jmexpander { border-color: #d6d0c4 !important; background: #f4f2ec !important; color: #8c8679 !important; }
+
+    /* Detail panel for mind map */
+    #mm-detail {
+      position: absolute; top: 10px; right: 10px;
+      width: 280px; max-height: calc(100% - 20px);
+      background: #ffffff; border: 1px solid #e8e4d9;
+      border-radius: 10px; overflow: hidden;
+      box-shadow: 0 8px 24px rgba(58,55,49,0.14);
+      display: none; flex-direction: column; z-index: 20;
+    }
+    #mm-detail.open { display: flex; animation: mmPop .15s ease; }
+    @keyframes mmPop { from { opacity:0; transform: scale(.96) translateY(4px); } to { opacity:1; transform:none; } }
+    .mm-detail-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px 8px; border-bottom: 1px solid #e8e4d9;
+      background: #f4f2ec;
+    }
+    .mm-detail-tag { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: #8c8679; font-weight: 600; }
+    .mm-detail-close {
+      background: none; border: none; color: #8c8679; cursor: pointer;
+      font-size: 13px; border-radius: 4px; padding: 1px 5px; line-height: 1;
+      transition: color .12s;
+    }
+    .mm-detail-close:hover { color: #3a3731; }
+    .mm-detail-body { padding: 10px 12px 14px; overflow-y: auto; }
+    .mm-detail-body h4 { font-family: 'Noto Serif', serif; font-size: .88rem; font-weight: 700; color: #27251f; margin-bottom: 6px; line-height: 1.4; }
+    /* Markdown rendered content inside mm-detail */
+    .mm-detail-md { font-size: .78rem; line-height: 1.8; color: #5e5a52; }
+    .mm-detail-md p { margin: 4px 0; }
+    .mm-detail-md h1, .mm-detail-md h2, .mm-detail-md h3,
+    .mm-detail-md h4, .mm-detail-md h5, .mm-detail-md h6 {
+      font-family: 'Noto Serif', serif; font-weight: 700; color: #27251f;
+      margin: 8px 0 4px; line-height: 1.4;
+    }
+    .mm-detail-md h1 { font-size: .92rem; }
+    .mm-detail-md h2 { font-size: .88rem; }
+    .mm-detail-md h3, .mm-detail-md h4 { font-size: .82rem; }
+    .mm-detail-md strong, .mm-detail-md b { font-weight: 700; color: #3a3731; }
+    .mm-detail-md em, .mm-detail-md i { font-style: italic; }
+    .mm-detail-md ul, .mm-detail-md ol { padding-left: 16px; margin: 4px 0; }
+    .mm-detail-md li { margin: 2px 0; }
+    .mm-detail-md ul li { list-style-type: disc; }
+    .mm-detail-md ol li { list-style-type: decimal; }
+    .mm-detail-md code {
+      background: #f4f2ec; border: 1px solid #e8e4d9; border-radius: 3px;
+      padding: 1px 4px; font-family: ui-monospace, monospace; font-size: .75rem; color: #3a3731;
+    }
+    .mm-detail-md pre {
+      background: #f4f2ec; border: 1px solid #e8e4d9; border-radius: 6px;
+      padding: 8px 10px; overflow-x: auto; margin: 6px 0;
+    }
+    .mm-detail-md pre code { background: none; border: none; padding: 0; font-size: .72rem; }
+    .mm-detail-md blockquote {
+      border-left: 3px solid #d6d0c4; padding-left: 10px;
+      margin: 6px 0; color: #8c8679; font-style: italic;
+    }
+    .mm-detail-md a { color: #2d6899; text-decoration: underline; }
+    .mm-detail-md hr { border: none; border-top: 1px solid #e8e4d9; margin: 8px 0; }
+    .mm-detail-md table { border-collapse: collapse; width: 100%; font-size: .73rem; margin: 6px 0; }
+    .mm-detail-md th, .mm-detail-md td { border: 1px solid #e8e4d9; padding: 4px 8px; }
+    .mm-detail-md th { background: #f4f2ec; font-weight: 600; color: #3a3731; }
+
+    /* ── Upload zone in docs tab ── */
+    #docs-upload-zone {
+      border: 2px dashed #d6d0c4; border-radius: 8px;
+      padding: 18px; text-align: center; cursor: pointer;
+      transition: all 0.15s ease; background: #faf9f6;
+    }
+    #docs-upload-zone:hover, #docs-upload-zone.drag-active {
+      border-color: #7aa3c8; background: #f0f4f8;
+    }
+
+    /* ── Docs output ── */
+    #docs-output-wrap pre {
+      font-family: 'ui-monospace', 'Cascadia Code', monospace;
+      font-size: 12.5px; line-height: 1.7; white-space: pre-wrap;
+      word-break: break-word; color: #3a3731;
+    }
   </style>
+  <!-- jsMind CSS (lazy loaded by mind-map.js but pre-fetch to avoid FOUC) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsmind@0.9.1/style/jsmind.css"/>
+
 </head>
 <body class="min-h-screen">
 
@@ -283,7 +471,26 @@
     <p class="text-sm">Đang tải bài kiểm tra...</p>
   </div>
 
+  <!-- ── Main Tab Bar ── -->
+  <div id="main-tabs" class="flex items-end gap-1 border-b border-paper-200 mb-6">
+    <button id="tab-exam-btn" class="main-tab-btn active" onclick="switchMainTab('exam')">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      Nội dung bài ôn
+    </button>
+    <button id="tab-docs-btn" class="main-tab-btn" onclick="switchMainTab('docs')">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+      </svg>
+      Tài liệu & Sơ đồ
+    </button>
+  </div>
+
   <div id="editor-content">
+
+    <!-- ─── TAB: EXAM (mặc định) ─── -->
+    <div id="tab-exam-panel">
 
     <!-- ─── SECTION: CẤU HÌNH ─── -->
     <section class="mb-8">
@@ -379,6 +586,143 @@
         Thêm nhóm câu hỏi
       </button>
     </section>
+
+    </div><!-- end #tab-exam-panel -->
+
+    <!-- ─── TAB: DOCS & SƠ ĐỒ TƯ DUY ─── -->
+    <div id="tab-docs-panel" class="hidden">
+
+      <!-- ── Upload DOCX to generate docs ── -->
+      <section class="mb-8">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="section-label">Tạo tài liệu từ DOCX</span>
+          <div class="flex-1 h-px bg-paper-200"></div>
+        </div>
+        <div class="bg-white border border-paper-200 rounded-lg shadow-paper p-5 space-y-4">
+
+          <!-- Drop zone -->
+          <div id="docs-upload-zone"
+               onclick="document.getElementById('docs-file-input').click()"
+               ondragover="event.preventDefault(); this.classList.add('drag-active')"
+               ondragleave="this.classList.remove('drag-active')"
+               ondrop="handleDocsFileDrop(event)">
+            <input id="docs-file-input" type="file" accept=".docx" class="hidden" onchange="handleDocsFile(this.files[0])">
+            <div id="docs-drop-idle">
+              <svg class="w-7 h-7 mx-auto mb-2 text-ink-300" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M12 3v13.5m-4.5-4.5L12 16.5l4.5-4.5"/>
+              </svg>
+              <p class="text-sm font-medium text-ink-400">Kéo thả hoặc click để chọn <span class="text-accent-500">.docx</span></p>
+              <p class="text-xs text-ink-300 mt-1">Sẽ tự động tạo tài liệu Markdown và sơ đồ tư duy</p>
+            </div>
+            <div id="docs-drop-selected" class="hidden flex items-center justify-center gap-3">
+              <svg class="w-5 h-5 text-success-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+              </svg>
+              <div>
+                <p id="docs-file-name" class="text-sm font-semibold text-ink-600"></p>
+                <p id="docs-char-count" class="text-xs text-ink-300"></p>
+              </div>
+              <button class="ml-auto text-xs text-ink-400 hover:text-danger-400 transition-base px-2 py-1" onclick="resetDocsFile(event)">✕ Đổi file</button>
+            </div>
+          </div>
+
+          <!-- Error -->
+          <div id="docs-alert" class="hidden flex items-start gap-2 px-4 py-3 rounded-md border border-danger-200 bg-danger-50 text-danger-300 text-sm">
+            <span class="mt-0.5">⚠</span><span id="docs-alert-text"></span>
+          </div>
+
+          <!-- Generate button -->
+          <button id="btn-generate-docs" disabled onclick="generateDocs()"
+                  class="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white bg-accent-500 rounded hover:bg-accent-600 disabled:opacity-40 disabled:cursor-not-allowed transition-base">
+            <span id="docs-spinner" class="spinner hidden !w-4 !h-4"></span>
+            <span id="docs-btn-text">Tạo tài liệu & Sơ đồ tư duy</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ── Sub-tabs: Editor | Mind Map ── -->
+      <section>
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex gap-1.5 p-1 bg-paper-100 rounded-lg border border-paper-200">
+            <button id="stab-editor-btn" class="sub-tab-btn active" onclick="switchSubTab('editor')">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125"/>
+              </svg>
+              Soạn nội dung
+            </button>
+            <button id="stab-mindmap-btn" class="sub-tab-btn" onclick="switchSubTab('mindmap')">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"/>
+              </svg>
+              Sơ đồ tư duy
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Sub-panel: Editor (Tiptap) -->
+        <div id="stab-editor-panel">
+          <div class="bg-white border border-paper-200 rounded-lg shadow-paper overflow-hidden">
+            <!-- Tiptap toolbar -->
+            <div class="tiptap-toolbar" id="tiptap-toolbar">
+              <button onclick="tiptapCmd('toggleHeading',{level:1})" data-fmt="h1" title="Heading 1 — tiêu đề chính (H1)"><b>H1</b></button>
+              <button onclick="tiptapCmd('toggleHeading',{level:2})" data-fmt="h2" title="Heading 2 — nhánh chính (H2)"><b>H2</b></button>
+              <button onclick="tiptapCmd('toggleHeading',{level:3})" data-fmt="h3" title="Heading 3 — nhánh phụ (H3)">H3</button>
+              <div class="sep"></div>
+              <button onclick="tiptapCmd('toggleBold')" data-fmt="bold" title="In đậm"><b>B</b></button>
+              <button onclick="tiptapCmd('toggleItalic')" data-fmt="italic" title="In nghiêng"><i>I</i></button>
+              <div class="sep"></div>
+              <button onclick="tiptapCmd('toggleBulletList')" data-fmt="bulletList" title="Danh sách">≡</button>
+              <div class="sep"></div>
+              <button onclick="tiptapCmd('undo')" title="Undo">↩</button>
+              <button onclick="tiptapCmd('redo')" title="Redo">↪</button>
+            </div>
+            <!-- Tiptap editable area -->
+            <div id="tiptap-editor" class="tiptap-content" data-placeholder="Nhập nội dung tài liệu... Dùng H1 làm tiêu đề chính, H2 làm nhánh sơ đồ, H3 làm nhánh phụ. Đoạn văn bản thường sẽ làm nội dung chi tiết của nhánh."></div>
+          </div>
+          <p class="text-xs text-ink-300 mt-2">
+            <span class="text-accent-500 font-medium"># H1</span> = tên sơ đồ &nbsp;·&nbsp;
+            <span class="text-accent-500 font-medium">## H2</span> = nhánh chính &nbsp;·&nbsp;
+            <span class="text-accent-500 font-medium">### H3</span> = nhánh phụ &nbsp;·&nbsp;
+            Đoạn văn = ghi chú chi tiết
+          </p>
+        </div>
+
+        <!-- Sub-panel: Mind Map preview -->
+        <div id="stab-mindmap-panel" class="hidden">
+          <div id="mindmap-container" class="border border-paper-200 rounded-lg overflow-hidden shadow-paper">
+            <!-- Light header -->
+            <div class="flex items-center justify-between px-4 py-2.5 bg-paper-100 border-b border-paper-200">
+              <span class="section-label">Preview · Sơ đồ tư duy</span>
+              <div class="flex items-center gap-2">
+                <button onclick="refreshMindMap()" class="text-xs px-2.5 py-1 rounded border border-paper-300 bg-white hover:bg-paper-100 text-ink-500 transition-base">↺ Làm mới</button>
+                <button onclick="openMindMapModal()" title="Mở rộng sơ đồ"
+                        class="flex items-center justify-center w-7 h-7 rounded border border-paper-300 bg-white hover:bg-paper-100 text-ink-500 transition-base">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v5.25m0-5.25h5.25M3.75 3.75L9.75 9.75M20.25 3.75h-5.25m5.25 0v5.25m0-5.25L14.25 9.75M3.75 20.25v-5.25m0 5.25h5.25m-5.25 0L9.75 14.25M20.25 20.25h-5.25m5.25 0v-5.25m0 5.25L14.25 14.25"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <!-- jsMind mount point -->
+            <div id="mindmap-inner"></div>
+            <!-- Detail panel -->
+            <div id="mm-detail">
+              <div class="mm-detail-head">
+                <span class="mm-detail-tag">Ghi chú</span>
+                <button class="mm-detail-close" onclick="document.getElementById('mm-detail').classList.remove('open')">✕</button>
+              </div>
+              <div class="mm-detail-body">
+                <h4 id="mm-detail-title"></h4>
+                <div id="mm-detail-text" class="mm-detail-md"></div>
+              </div>
+            </div>
+          </div>
+          <p class="text-xs text-ink-300 mt-2">Click vào nút 📄 để xem ghi chú chi tiết · Kéo để di chuyển · Ctrl+Scroll để zoom</p>
+        </div>
+      </section>
+
+    </div><!-- end #tab-docs-panel -->
 
   </div><!-- end #editor-content -->
 </main>
@@ -713,17 +1057,17 @@ async function loadExam(uuid) {
 }
 
 async function parseZip(arrayBuffer) {
-  // Minimal ZIP parser for exam.json
+  // Parse exam.json + docs.md from ZIP
   try {
     const bytes = new Uint8Array(arrayBuffer);
-    // Find exam.json in zip entries
     const entries = readZipEntries(bytes);
+
+    // ── exam.json ──
     const examEntry = entries.find(e => e.name === 'exam.json');
     if (examEntry) {
       const json = new TextDecoder().decode(examEntry.data);
       const examData = JSON.parse(json);
       state.groups = examData.groups || [];
-      // Re-assign counters
       state.groups.forEach(g => {
         const gi = parseInt(g.id.replace('g','')) || 0;
         if (gi > groupIdCounter) groupIdCounter = gi;
@@ -739,6 +1083,24 @@ async function parseZip(arrayBuffer) {
         });
       });
     }
+
+    // ── docs.md → load into Tiptap editor ──
+    const docsEntry = entries.find(e => e.name === 'docs.md');
+    if (docsEntry) {
+      const md = new TextDecoder().decode(docsEntry.data);
+      _docsMarkdown = md;
+      // Defer until Tiptap is ready
+      const trySet = () => {
+        if (window._tiptapEditor && typeof setTiptapMarkdown === 'function') {
+          setTiptapMarkdown(md);
+          document.getElementById('btn-download-docs')?.classList.remove('hidden');
+        } else {
+          setTimeout(trySet, 200);
+        }
+      };
+      trySet();
+    }
+
     // Store media blobs (skip for now; media referenced by name)
   } catch (e) {
     console.warn('ZIP parse error:', e);
@@ -843,8 +1205,16 @@ async function saveExam() {
     const examJson = buildExamJson();
     const jsonBytes = new TextEncoder().encode(JSON.stringify(examJson, null, 2));
 
-    // Build ZIP (store method, no compression)
-    const zipBytes = buildZip([{ name: 'exam.json', data: jsonBytes }]);
+    // Build docs.md if tiptap has content
+    const docsMarkdown = getTiptapMarkdown ? getTiptapMarkdown() : '';
+    const docsBytes = docsMarkdown.trim()
+      ? new TextEncoder().encode(docsMarkdown)
+      : null;
+
+    // Build ZIP (store method, no compression) — exam.json + optional docs.md
+    const zipEntries = [{ name: 'exam.json', data: jsonBytes }];
+    if (docsBytes) zipEntries.push({ name: 'docs.md', data: docsBytes });
+    const zipBytes = buildZip(zipEntries);
 
     // Upload ZIP to storage
     const zipPath = `${state.userId}/${examId}.zip`;
@@ -1909,8 +2279,25 @@ async function handleZipFile(file) {
     markContentDirty();
     renderGroups();
 
+    // ── 6. Load docs.md vào Tiptap editor nếu có ──
+    const docsFile = zip.file('docs.md');
+    if (docsFile) {
+      const md = await docsFile.async('string');
+      _docsMarkdown = md;
+      const trySet = () => {
+        if (window._tiptapEditor && typeof setTiptapMarkdown === 'function') {
+          setTiptapMarkdown(md);
+          document.getElementById('btn-download-docs')?.classList.remove('hidden');
+        } else {
+          setTimeout(trySet, 200);
+        }
+      };
+      trySet();
+    }
+
+    const docsInfo = docsFile ? ' + docs.md' : '';
     const mediaInfo = newMediaMap.size > 0 ? ` (${newMediaMap.size} file media)` : '';
-    showToast('success', `Đã import ${totalQ} câu hỏi từ ${file.name}${mediaInfo}`);
+    showToast('success', `Đã import ${totalQ} câu hỏi${docsInfo} từ ${file.name}${mediaInfo}`);
 
   } catch (err) {
     console.error('ZIP import error:', err);
@@ -1942,6 +2329,12 @@ async function downloadExamZip() {
       groups: state.groups,
     };
     zip.file('exam.json', JSON.stringify(examData, null, 2));
+
+    // Add docs.md if tiptap has content
+    const docsMarkdown = getTiptapMarkdown ? getTiptapMarkdown() : '';
+    if (docsMarkdown.trim()) {
+      zip.file('docs.md', docsMarkdown);
+    }
     
     // Add media files from mediaMap
     if (state.mediaMap && state.mediaMap.size > 0) {
@@ -1952,14 +2345,15 @@ async function downloadExamZip() {
     }
     
     // Add README
-    const readme = `# Exam Data Export
-    
+    const readme = `# Exama Plus Export
+
 Exported: ${new Date().toLocaleString('vi-VN')}
 Title: ${state.config.title || 'Untitled'}
 
 Files:
-- exam.json: Exam structure and questions
-- media/: Images and media files referenced in the exam
+- exam.json : Cấu trúc đề thi và câu hỏi
+- docs.md   : Tài liệu ôn tập (Markdown)
+- media/    : Ảnh và file media đính kèm
 
 To import: Use the Upload button and select this ZIP file.
 `;
@@ -2016,7 +2410,7 @@ function updateShareLinkUI(isPublic) {
   if (isPublic && state.examUuid) {
     disabled.classList.add('hidden');
     box.classList.remove('hidden');
-    input.value = `https://exama-lite.pages.devstudy?uuid=${state.examUuid}`;
+    input.value = `https://examaplus.pages.devstudy?uuid=${state.examUuid}`;
   } else {
     box.classList.add('hidden');
     disabled.classList.remove('hidden');
@@ -2110,6 +2504,467 @@ document.getElementById('confirm-modal').addEventListener('click', function(e) {
 });
 
 // ═══════════════════════════════════════════
+// MAIN TAB SWITCHING
+// ═══════════════════════════════════════════
+let _activeMainTab = 'exam';
+function switchMainTab(tab) {
+  _activeMainTab = tab;
+  document.getElementById('tab-exam-panel').classList.toggle('hidden', tab !== 'exam');
+  document.getElementById('tab-docs-panel').classList.toggle('hidden', tab !== 'docs');
+  document.getElementById('tab-exam-btn').classList.toggle('active', tab === 'exam');
+  document.getElementById('tab-docs-btn').classList.toggle('active', tab === 'docs');
+  // Re-render mindmap if switching to docs and mindmap is active
+  if (tab === 'docs' && _activeSubTab === 'mindmap') {
+    setTimeout(refreshMindMap, 100);
+  }
+}
+
+// ═══════════════════════════════════════════
+// SUB TAB SWITCHING (docs tab)
+// ═══════════════════════════════════════════
+let _activeSubTab = 'editor';
+function switchSubTab(tab) {
+  _activeSubTab = tab;
+  document.getElementById('stab-editor-panel').classList.toggle('hidden', tab !== 'editor');
+  document.getElementById('stab-mindmap-panel').classList.toggle('hidden', tab !== 'mindmap');
+  document.getElementById('stab-editor-btn').classList.toggle('active', tab === 'editor');
+  document.getElementById('stab-mindmap-btn').classList.toggle('active', tab === 'mindmap');
+  if (tab === 'mindmap') {
+    setTimeout(refreshMindMap, 80);
+  }
+}
+
+// ═══════════════════════════════════════════
+// DOCS — FILE HANDLING
+// ═══════════════════════════════════════════
+const DOCS_SUPABASE_EDGE_URL = 'https://tcdnpkrooeqagbmergne.supabase.co/functions/v1/document-generator';
+const DOCS_MAX_CHARS = 80_000;
+
+let _docsParsedText = '';
+let _docsMarkdown = '';
+
+function handleDocsFileDrop(e) {
+  e.preventDefault();
+  document.getElementById('docs-upload-zone').classList.remove('drag-active');
+  const file = e.dataTransfer?.files?.[0];
+  if (file) handleDocsFile(file);
+}
+
+async function handleDocsFile(file) {
+  if (!file || !file.name.endsWith('.docx')) {
+    showDocsAlert('Chỉ hỗ trợ file .docx');
+    return;
+  }
+  clearDocsAlert();
+  _docsParsedText = '';
+
+  try {
+    // Use Mammoth for plain text extraction
+    if (typeof mammoth === 'undefined') {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js');
+    }
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    _docsParsedText = result.value;
+
+    const len = _docsParsedText.length;
+    const isOver = len > DOCS_MAX_CHARS;
+    document.getElementById('docs-file-name').textContent = file.name;
+    document.getElementById('docs-char-count').textContent = `${len.toLocaleString()} ký tự${isOver ? ' — QUÁ DÀI' : ''}`;
+    document.getElementById('docs-drop-idle').classList.add('hidden');
+    document.getElementById('docs-drop-selected').classList.remove('hidden');
+
+    if (isOver) {
+      showDocsAlert(`Văn bản quá dài (${len.toLocaleString()} ký tự). Tối đa ${DOCS_MAX_CHARS.toLocaleString()} ký tự.`);
+    }
+  } catch (err) {
+    showDocsAlert('Không thể đọc file docx: ' + err.message);
+  }
+
+  updateDocsBtn();
+}
+
+function resetDocsFile(e) {
+  e?.stopPropagation();
+  _docsParsedText = '';
+  document.getElementById('docs-drop-idle').classList.remove('hidden');
+  document.getElementById('docs-drop-selected').classList.add('hidden');
+  document.getElementById('docs-file-input').value = '';
+  clearDocsAlert();
+  updateDocsBtn();
+}
+
+function updateDocsBtn() {
+  const hasText = _docsParsedText.length > 0 && _docsParsedText.length <= DOCS_MAX_CHARS;
+  document.getElementById('btn-generate-docs').disabled = !hasText;
+}
+
+// ═══════════════════════════════════════════
+// DOCS — GENERATE via Gemini (Supabase Edge)
+// ═══════════════════════════════════════════
+async function generateDocs() {
+  if (!_docsParsedText) return;
+
+  const token = localStorage.getItem('sb_access_token') || currentAccessToken;
+  if (!token) { showDocsAlert('Chưa đăng nhập — không tìm được access token.'); return; }
+
+  clearDocsAlert();
+  setDocsLoading(true);
+
+  try {
+    const res = await fetch(DOCS_SUPABASE_EDGE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ text: _docsParsedText }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showDocsAlert(data?.error || `Lỗi server (${res.status})`); return; }
+
+    _docsMarkdown = data.markdown || '';
+
+    // Push markdown content into Tiptap editor
+    if (window._tiptapEditor) {
+      setTiptapMarkdown(_docsMarkdown);
+    }
+
+    // Show download button
+    document.getElementById('btn-download-docs').classList.remove('hidden');
+
+    showToast('success', 'Tạo tài liệu thành công! Kiểm tra tab "Soạn nội dung" và "Sơ đồ tư duy".');
+
+    // Auto-switch to mindmap preview
+    switchSubTab('mindmap');
+  } catch (err) {
+    showDocsAlert('Không thể kết nối server. Kiểm tra mạng và thử lại.');
+  } finally {
+    setDocsLoading(false);
+  }
+}
+
+function setDocsLoading(on) {
+  document.getElementById('btn-generate-docs').disabled = on;
+  document.getElementById('docs-spinner').classList.toggle('hidden', !on);
+  document.getElementById('docs-btn-text').textContent = on ? 'Đang xử lý...' : 'Tạo tài liệu & Sơ đồ tư duy';
+}
+
+function showDocsAlert(msg) {
+  const el = document.getElementById('docs-alert');
+  document.getElementById('docs-alert-text').textContent = msg;
+  el.classList.remove('hidden');
+}
+function clearDocsAlert() {
+  document.getElementById('docs-alert').classList.add('hidden');
+}
+
+// ═══════════════════════════════════════════
+// DOCS — ZIP DOWNLOAD (delegates to unified downloadExamZip)
+// ═══════════════════════════════════════════
+async function downloadDocsZip() {
+  // Unified ZIP includes both exam.json and docs.md
+  await downloadExamZip();
+}
+
+// ═══════════════════════════════════════════
+// TIPTAP EDITOR
+// ═══════════════════════════════════════════
+let _tiptapEditor = null;
+window._tiptapEditor = null;
+
+async function initTiptap() {
+  try {
+    const { Editor } = await import('@tiptap/core');
+    const { Document } = await import('@tiptap/extension-document');
+    const { Paragraph } = await import('@tiptap/extension-paragraph');
+    const { Text } = await import('@tiptap/extension-text');
+    const { Heading } = await import('@tiptap/extension-heading');
+    const { Bold } = await import('@tiptap/extension-bold');
+    const { Italic } = await import('@tiptap/extension-italic');
+    const { BulletList } = await import('@tiptap/extension-bullet-list');
+    const { ListItem } = await import('@tiptap/extension-list-item');
+    const { History } = await import('@tiptap/extension-history');
+
+    _tiptapEditor = new Editor({
+      element: document.getElementById('tiptap-editor'),
+      extensions: [Document, Paragraph, Text, Heading.configure({ levels: [1,2,3] }), Bold, Italic, BulletList, ListItem, History],
+      content: '<p></p>',
+      onUpdate: () => { updateTiptapToolbar(); },
+      onSelectionUpdate: () => { updateTiptapToolbar(); },
+    });
+    window._tiptapEditor = _tiptapEditor;
+
+    // Remove inner ProseMirror div's default focus ring
+    const pm = document.querySelector('.ProseMirror');
+    if (pm) {
+      pm.style.outline = 'none';
+      pm.style.minHeight = '200px';
+      pm.style.padding = '0';
+    }
+  } catch (e) {
+    console.warn('Tiptap init error (importmap may not be supported):', e.message);
+    // Fallback: plain contenteditable
+    initTiptapFallback();
+  }
+}
+
+function initTiptapFallback() {
+  const el = document.getElementById('tiptap-editor');
+  el.contentEditable = 'true';
+  el.style.minHeight = '200px';
+  el.addEventListener('input', updateTiptapToolbar);
+
+  // Create a stub that at least can get/set HTML
+  window._tiptapEditor = {
+    _el: el,
+    commands: {
+      toggleHeading: (a) => document.execCommand('formatBlock', false, `h${a.level}`),
+      toggleBold: () => document.execCommand('bold'),
+      toggleItalic: () => document.execCommand('italic'),
+      toggleBulletList: () => document.execCommand('insertUnorderedList'),
+      undo: () => document.execCommand('undo'),
+      redo: () => document.execCommand('redo'),
+    },
+    isActive: () => false,
+    getHTML: () => el.innerHTML,
+    isFallback: true,
+  };
+  _tiptapEditor = window._tiptapEditor;
+}
+
+function tiptapCmd(cmd, args) {
+  if (!_tiptapEditor) return;
+  if (_tiptapEditor.isFallback) {
+    _tiptapEditor.commands[cmd]?.(args);
+    return;
+  }
+  if (cmd === 'undo') { _tiptapEditor.commands.undo(); return; }
+  if (cmd === 'redo') { _tiptapEditor.commands.redo(); return; }
+  _tiptapEditor.chain().focus()[cmd](args).run();
+  updateTiptapToolbar();
+}
+
+function updateTiptapToolbar() {
+  if (!_tiptapEditor || _tiptapEditor.isFallback) return;
+  const checks = {
+    h1: () => _tiptapEditor.isActive('heading', { level: 1 }),
+    h2: () => _tiptapEditor.isActive('heading', { level: 2 }),
+    h3: () => _tiptapEditor.isActive('heading', { level: 3 }),
+    bold: () => _tiptapEditor.isActive('bold'),
+    italic: () => _tiptapEditor.isActive('italic'),
+    bulletList: () => _tiptapEditor.isActive('bulletList'),
+  };
+  document.querySelectorAll('#tiptap-toolbar [data-fmt]').forEach(btn => {
+    const fmt = btn.dataset.fmt;
+    btn.classList.toggle('active-fmt', checks[fmt]?.() || false);
+  });
+}
+
+function getTiptapMarkdown() {
+  if (!_tiptapEditor) return '';
+  if (_tiptapEditor.isFallback) return htmlToMarkdown(_tiptapEditor.getHTML());
+  return htmlToMarkdown(_tiptapEditor.getHTML());
+}
+
+function setTiptapMarkdown(md) {
+  if (!_tiptapEditor) return;
+  const html = markdownToHtml(md);
+  if (_tiptapEditor.isFallback) {
+    _tiptapEditor._el.innerHTML = html;
+    return;
+  }
+  _tiptapEditor.commands.setContent(html, false);
+}
+
+// ── Minimal Markdown ↔ HTML converters ──────────────────────────────
+function markdownToHtml(md) {
+  if (!md) return '<p></p>';
+  let html = '';
+  const lines = md.split('\n');
+  let inList = false;
+
+  function inlineMd(s) {
+    return s
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/__(.+?)__/g, '<strong>$1</strong>')
+      .replace(/_(.+?)_/g, '<em>$1</em>')
+      .replace(/`(.+?)`/g, '<code>$1</code>');
+  }
+
+  for (const line of lines) {
+    const h3 = line.match(/^###\s+(.+)/);
+    const h2 = !h3 && line.match(/^##(?!#)\s+(.+)/);
+    const h1 = !h2 && !h3 && line.match(/^#(?!#)\s+(.+)/);
+    const li = line.match(/^[-*]\s+(.+)/);
+
+    if (h1) { if (inList) { html += '</ul>'; inList = false; } html += `<h1>${inlineMd(h1[1])}</h1>`; continue; }
+    if (h2) { if (inList) { html += '</ul>'; inList = false; } html += `<h2>${inlineMd(h2[1])}</h2>`; continue; }
+    if (h3) { if (inList) { html += '</ul>'; inList = false; } html += `<h3>${inlineMd(h3[1])}</h3>`; continue; }
+    if (li) { if (!inList) { html += '<ul>'; inList = true; } html += `<li>${inlineMd(li[1])}</li>`; continue; }
+
+    if (inList) { html += '</ul>'; inList = false; }
+    const trimmed = line.trim();
+    if (trimmed) html += `<p>${inlineMd(trimmed)}</p>`;
+    else html += '<p></p>';
+  }
+  if (inList) html += '</ul>';
+  return html || '<p></p>';
+}
+
+function htmlToMarkdown(html) {
+  if (!html) return '';
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  const lines = [];
+
+  function nodeToMd(node) {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent;
+    const tag = node.tagName?.toLowerCase();
+    const inner = Array.from(node.childNodes).map(nodeToMd).join('');
+    switch (tag) {
+      case 'strong': case 'b': return `**${inner}**`;
+      case 'em':     case 'i': return `*${inner}*`;
+      case 'code':             return `\`${inner}\``;
+      case 'br':               return '\n';
+      default: return inner;
+    }
+  }
+
+  function walkBlock(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const t = node.textContent.trim();
+      if (t) lines.push(t);
+      return;
+    }
+    const tag = node.tagName?.toLowerCase();
+    switch (tag) {
+      case 'h1': lines.push('# ' + Array.from(node.childNodes).map(nodeToMd).join('')); break;
+      case 'h2': lines.push('## ' + Array.from(node.childNodes).map(nodeToMd).join('')); break;
+      case 'h3': lines.push('### ' + Array.from(node.childNodes).map(nodeToMd).join('')); break;
+      case 'p': {
+        const txt = Array.from(node.childNodes).map(nodeToMd).join('').trim();
+        lines.push(txt); // push even if empty (blank line)
+        break;
+      }
+      case 'ul': case 'ol':
+        node.childNodes.forEach(c => {
+          if (c.tagName?.toLowerCase() === 'li') {
+            lines.push('- ' + Array.from(c.childNodes).map(nodeToMd).join('').trim());
+          }
+        });
+        break;
+      case 'li': lines.push('- ' + Array.from(node.childNodes).map(nodeToMd).join('').trim()); break;
+      default: node.childNodes.forEach(walkBlock); break;
+    }
+  }
+
+  div.childNodes.forEach(walkBlock);
+  // Collapse multiple blank lines to one
+  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+// ═══════════════════════════════════════════
+// MIND MAP — RENDER
+// ═══════════════════════════════════════════
+let _jmInstance = null;
+let _mmNotes = {};
+
+async function refreshMindMap() {
+  const md = getTiptapMarkdown();
+  if (!md.trim()) {
+    document.getElementById('mindmap-inner').innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8c8679;font-size:13px;flex-direction:column;gap:8px;background:#faf9f6;">
+        <span style="font-size:28px;">🗺</span>
+        <span>Nhập nội dung ở tab "Soạn nội dung" để xem sơ đồ</span>
+      </div>`;
+    return;
+  }
+
+  // Dynamically import mind-map.js
+  let renderMindMap, destroyMindMap;
+  try {
+    const mod = await import('./mind-map.js');
+    renderMindMap = mod.renderMindMap;
+    destroyMindMap = mod.destroyMindMap;
+  } catch(e) {
+    console.error('mind-map.js load error:', e);
+    return;
+  }
+
+  // Destroy previous instance
+  if (_jmInstance) { destroyMindMap(_jmInstance); _jmInstance = null; }
+
+  // Reset container
+  const inner = document.getElementById('mindmap-inner');
+  inner.innerHTML = '';
+
+  try {
+    const result = await renderMindMap('mindmap-inner', md);
+    if (result) {
+      _jmInstance = result;
+      _mmNotes = result.notes || {};
+      bindMindMapClicks();
+    }
+  } catch(e) {
+    console.error('Mind map render error:', e);
+    inner.innerHTML = `<div style="padding:20px;color:#d05f5f;font-size:13px;">Lỗi render sơ đồ: ${e.message}</div>`;
+  }
+}
+
+function bindMindMapClicks() {
+  const inner = document.getElementById('mindmap-inner');
+  inner.removeEventListener('click', _mmClickHandler);
+  inner.addEventListener('click', _mmClickHandler);
+}
+
+function _mmClickHandler(e) {
+  const nodeEl = e.target.closest('jmnode');
+  if (!nodeEl) {
+    document.getElementById('mm-detail').classList.remove('open');
+    return;
+  }
+  const nodeId = nodeEl.getAttribute('nodeid');
+  if (!nodeId || !_jmInstance || !_jmInstance.jm) {
+    document.getElementById('mm-detail').classList.remove('open');
+    return;
+  }
+  const node = _jmInstance.jm.get_node(nodeId);
+  if (!node) { document.getElementById('mm-detail').classList.remove('open'); return; }
+  const topic = node.topic;
+  const note = _mmNotes[topic];
+  if (note) {
+    document.getElementById('mm-detail-title').textContent = note.title;
+    document.getElementById('mm-detail-text').innerHTML =
+      (typeof marked !== 'undefined') ? marked.parse(note.text) : note.text.replace(/\n/g, '<br>');
+    const d = document.getElementById('mm-detail');
+    d.classList.remove('open');
+    requestAnimationFrame(() => d.classList.add('open'));
+  } else {
+    document.getElementById('mm-detail').classList.remove('open');
+  }
+}
+
+// ═══════════════════════════════════════════
+// UTILITY
+// ═══════════════════════════════════════════
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+// Init Tiptap when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  initTiptap();
+});
+
+// ═══════════════════════════════════════════
 // TOAST
 // ═══════════════════════════════════════════
 function showToast(type, message) {
@@ -2163,6 +3018,132 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') {
     e.preventDefault();
     saveExam();
+  }
+});
+</script>
+
+<!-- ═══ MIND MAP MODAL ═══ -->
+<div id="mm-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(26,24,20,0.45);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#faf9f6;border-radius:12px;box-shadow:0 16px 48px rgba(26,24,20,0.22);width:100%;height:100%;max-width:calc(100vw - 40px);max-height:calc(100vh - 40px);display:flex;flex-direction:column;overflow:hidden;position:relative;">
+    <!-- Modal header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#f4f2ec;border-bottom:1px solid #e8e4d9;flex-shrink:0;">
+      <span style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8c8679;">Sơ đồ tư duy</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="refreshMindMapModal()" style="font-size:12px;padding:3px 10px;border-radius:5px;border:1px solid #d6d0c4;background:white;color:#5e5a52;cursor:pointer;">↺ Làm mới</button>
+        <button onclick="closeMindMapModal()" title="Đóng"
+                style="width:28px;height:28px;border-radius:6px;border:1px solid #d6d0c4;background:white;color:#5e5a52;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;">✕</button>
+      </div>
+    </div>
+    <!-- jsMind mount inside modal -->
+    <div style="flex:1;position:relative;overflow:hidden;">
+      <div id="mindmap-modal-inner" style="width:100%;height:100%;background:#faf9f6;"></div>
+      <!-- Detail panel inside modal -->
+      <div id="mm-modal-detail" style="position:absolute;top:12px;right:12px;width:300px;max-height:calc(100% - 24px);background:#fff;border:1px solid #e8e4d9;border-radius:10px;box-shadow:0 8px 24px rgba(58,55,49,0.14);display:none;flex-direction:column;z-index:20;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px;border-bottom:1px solid #e8e4d9;background:#f4f2ec;">
+          <span style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#8c8679;font-weight:600;">Ghi chú</span>
+          <button onclick="document.getElementById('mm-modal-detail').style.display='none'" style="background:none;border:none;color:#8c8679;cursor:pointer;font-size:13px;border-radius:4px;padding:1px 5px;">✕</button>
+        </div>
+        <div style="padding:10px 12px 14px;overflow-y:auto;">
+          <h4 id="mm-modal-detail-title" style="font-family:'Noto Serif',serif;font-size:.88rem;font-weight:700;color:#27251f;margin-bottom:6px;line-height:1.4;"></h4>
+          <div id="mm-modal-detail-text" class="mm-detail-md"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let _jmModalInstance = null;
+
+async function openMindMapModal() {
+  const modal = document.getElementById('mm-modal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  await renderMindMapModal();
+}
+
+function closeMindMapModal() {
+  document.getElementById('mm-modal').style.display = 'none';
+  document.body.style.overflow = '';
+  if (_jmModalInstance) {
+    try { _jmModalInstance.jm?.destroy?.(); } catch(_) {}
+    _jmModalInstance = null;
+  }
+  document.getElementById('mindmap-modal-inner').innerHTML = '';
+  document.getElementById('mm-modal-detail').style.display = 'none';
+}
+
+async function renderMindMapModal() {
+  const md = getTiptapMarkdown();
+  if (!md.trim()) {
+    document.getElementById('mindmap-modal-inner').innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8c8679;font-size:13px;flex-direction:column;gap:8px;">'+
+      '<span style="font-size:28px;">🗺</span><span>Chưa có nội dung để hiển thị</span></div>';
+    return;
+  }
+  if (_jmModalInstance) {
+    try { _jmModalInstance.jm?.destroy?.(); } catch(_) {}
+    _jmModalInstance = null;
+  }
+  document.getElementById('mindmap-modal-inner').innerHTML = '';
+  let renderMindMap, destroyMindMap;
+  try {
+    const mod = await import('./mind-map.js');
+    renderMindMap = mod.renderMindMap;
+    destroyMindMap = mod.destroyMindMap;
+  } catch(e) { console.error('mind-map.js load error:', e); return; }
+
+  try {
+    const result = await renderMindMap('mindmap-modal-inner', md);
+    if (result) {
+      _jmModalInstance = result;
+      bindMindMapModalClicks();
+    }
+  } catch(e) {
+    document.getElementById('mindmap-modal-inner').innerHTML =
+      '<div style="padding:20px;color:#d05f5f;font-size:13px;">Lỗi render sơ đồ: ' + e.message + '</div>';
+  }
+}
+
+async function refreshMindMapModal() {
+  await renderMindMapModal();
+}
+
+function bindMindMapModalClicks() {
+  const inner = document.getElementById('mindmap-modal-inner');
+  inner.removeEventListener('click', _mmModalClickHandler);
+  inner.addEventListener('click', _mmModalClickHandler);
+}
+
+function _mmModalClickHandler(e) {
+  const nodeEl = e.target.closest('jmnode');
+  const detailEl = document.getElementById('mm-modal-detail');
+  if (!nodeEl) { detailEl.style.display = 'none'; return; }
+  const nodeId = nodeEl.getAttribute('nodeid');
+  if (!nodeId || !_jmModalInstance?.jm) { detailEl.style.display = 'none'; return; }
+  const node = _jmModalInstance.jm.get_node(nodeId);
+  if (!node) { detailEl.style.display = 'none'; return; }
+  const note = (_jmModalInstance.notes || {})[node.topic];
+  if (note) {
+    document.getElementById('mm-modal-detail-title').textContent = note.title;
+    document.getElementById('mm-modal-detail-text').innerHTML =
+      (typeof marked !== 'undefined') ? marked.parse(note.text) : note.text.replace(/\n/g, '<br>');
+    detailEl.style.display = 'flex';
+    detailEl.style.flexDirection = 'column';
+  } else {
+    detailEl.style.display = 'none';
+  }
+}
+
+// Close modal on overlay click
+document.getElementById('mm-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeMindMapModal();
+});
+
+// Escape key closes modal
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('mm-modal').style.display !== 'none') {
+    closeMindMapModal();
   }
 });
 </script>

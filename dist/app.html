@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard — Exama Lite</title>
+  <title>Dashboard — Exama Plus</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" />
@@ -121,7 +121,7 @@
   <!-- Topbar -->
   <header class="h-14 flex items-center justify-between px-5 bg-white border-b border-paper-200 shadow-paper sticky top-0 z-30">
     <a href="/" class="font-serif text-[18px] font-bold text-ink-700 hover:text-accent-600 transition-colors duration-150 no-underline">
-      Exama Lite
+      Exama Plus
     </a>
 
     <!-- Right: user info + logout -->
@@ -563,7 +563,7 @@
     }
 
     if (action === 'copy') {
-      const link = `https://exama-lite.pages.devstudy?uuid=${uuid}`;
+      const link = `https://examaplus.pages.devstudy?uuid=${uuid}`;
       try {
         await navigator.clipboard.writeText(link);
         showToast('Đã sao chép link làm bài.', 'success');
