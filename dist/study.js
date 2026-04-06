@@ -209,6 +209,10 @@ async function downloadExam(signedUrl) {
             }
         }
         
+        // Read docs.md if present
+        const docsFile = zip.file('docs.md');
+        examData.docsMarkdown = docsFile ? await docsFile.async('text') : null;
+        
         return true;
     } catch (error) {
         console.error('Error downloading exam:', error);
@@ -260,6 +264,7 @@ async function startDownload() {
             const totalQuestions = countTotalQuestions();
             document.getElementById('totalQuestions').textContent = totalQuestions;
             document.getElementById('configSection').classList.remove('hidden');
+            initTheorySection();
         } catch (error) {
             showError('Không thể tải nội dung bài kiểm tra: ' + error.message);
         }
@@ -289,6 +294,7 @@ async function startDownload() {
         setTimeout(() => {
             progressContainer.classList.add('hidden');
             document.getElementById('configSection').classList.remove('hidden');
+            initTheorySection();
         }, 500);
         
     } catch (error) {
@@ -1649,4 +1655,242 @@ function smoothScrollTo(id) {
     if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// THEORY SECTION (modal popup with mind map + docs + leaf notes)
+// ═══════════════════════════════════════════════════════════════════
+
+let theoryJm = null;
+let theoryView = 'mindmap';
+let theoryMindInited = false;
+
+// ── Leaf note data extracted from docs.md ───────────────────────────
+// Maps node topic text → { title, bodyHtml }
+let leafNoteMap = {};
+
+function initTheorySection() {
+    if (!examData || !examData.docsMarkdown) return;
+    const sec = document.getElementById('theorySection');
+    if (sec) sec.classList.remove('hidden');
+    // Pre-parse leaf notes from markdown
+    leafNoteMap = parseLeafNotes(examData.docsMarkdown);
+}
+
+function openTheoryModal() {
+    const modal = document.getElementById('theoryModal');
+    modal.classList.remove('hidden');
+    // Prevent body scroll on mobile
+    document.body.style.overflow = 'hidden';
+    if (!theoryMindInited && theoryView === 'mindmap') {
+        theoryMindInited = true;
+        setTimeout(buildMindMap, 80);
+    }
+    if (theoryView === 'docs') renderDocs();
+}
+
+function closeTheoryModal() {
+    const modal = document.getElementById('theoryModal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+    closeLeafPanel();
+}
+
+function switchTheoryView(view) {
+    theoryView = view;
+    const mmView   = document.getElementById('theoryMindmapView');
+    const docsView = document.getElementById('theoryDocsView');
+    const mmBtn    = document.getElementById('viewMindmapBtn');
+    const docsBtn  = document.getElementById('viewDocsBtn');
+
+    const activeClass  = 'px-3 py-1.5 rounded-md text-xs font-semibold transition-colors bg-white text-accent-600 shadow-sm border border-paper-200';
+    const inactiveClass = 'px-3 py-1.5 rounded-md text-xs font-semibold transition-colors text-ink-400 hover:text-ink-500';
+
+    if (view === 'mindmap') {
+        mmView.classList.remove('hidden');
+        docsView.classList.add('hidden');
+        mmBtn.className = activeClass;
+        docsBtn.className = inactiveClass;
+        closeLeafPanel();
+        if (!theoryMindInited) { theoryMindInited = true; setTimeout(buildMindMap, 80); }
+        else if (theoryJm) { setTimeout(() => theoryJm.view.reset_zoom && theoryJm.view.reset_zoom(), 60); }
+    } else {
+        mmView.classList.add('hidden');
+        docsView.classList.remove('hidden');
+        mmBtn.className = inactiveClass;
+        docsBtn.className = activeClass;
+        closeLeafPanel();
+        renderDocs();
+    }
+}
+
+function renderDocs() {
+    const el = document.getElementById('theoryDocsContent');
+    if (!el || !examData.docsMarkdown) return;
+    if (!el.innerHTML) el.innerHTML = marked.parse(examData.docsMarkdown);
+}
+
+// ── Leaf note panel ─────────────────────────────────────────────────
+function openLeafPanel(title, bodyHtml) {
+    const panel = document.getElementById('theoryLeafPanel');
+    document.getElementById('leafPanelTitle').textContent = title;
+    document.getElementById('leafPanelText').innerHTML = bodyHtml;
+    panel.classList.remove('hidden');
+    panel.style.animation = 'none';
+    requestAnimationFrame(() => {
+        panel.style.animation = 'theoryModalIn .18s ease both';
+    });
+}
+
+function closeLeafPanel() {
+    document.getElementById('theoryLeafPanel').classList.add('hidden');
+}
+
+// ── Parse docs.md into leaf note map ────────────────────────────────
+// For each heading, its "body" is the paragraphs immediately below it
+// until the next heading of equal or higher level.
+function parseLeafNotes(md) {
+    const map = {};
+    const lines = md.split('\n');
+    const sections = [];
+    let current = null;
+
+    lines.forEach(line => {
+        const m = line.match(/^(#{1,6})\s+(.*)/);
+        if (m) {
+            if (current) sections.push(current);
+            current = { level: m[1].length, title: m[2].trim(), bodyLines: [] };
+        } else if (current) {
+            current.bodyLines.push(line);
+        }
+    });
+    if (current) sections.push(current);
+
+    sections.forEach(sec => {
+        const body = sec.bodyLines.join('\n').trim();
+        if (body) {
+            map[sec.title] = {
+                title: sec.title,
+                bodyHtml: marked.parse(body)
+            };
+        }
+    });
+    return map;
+}
+
+// ── Parse Markdown headings into tree ───────────────────────────────
+function parseMarkdownToTree(md) {
+    const lines = md.split('\n');
+    const headings = [];
+    lines.forEach(line => {
+        const m = line.match(/^(#{1,6})\s+(.*)/);
+        if (m) headings.push({ level: m[1].length, text: m[2].trim() });
+    });
+    if (!headings.length) return null;
+
+    let idCount = 0;
+    const nextId = () => 'n' + (++idCount);
+    const rootNode = { id: 'root', topic: headings[0].text, children: [] };
+    const stack = [{ level: headings[0].level, node: rootNode }];
+
+    headings.slice(1).forEach(h => {
+        while (stack.length > 1 && stack[stack.length - 1].level >= h.level) stack.pop();
+        const parent = stack[stack.length - 1].node;
+        const node = { id: nextId(), topic: h.text, children: [] };
+        parent.children.push(node);
+        stack.push({ level: h.level, node });
+    });
+
+    return rootNode;
+}
+
+// ── Paper color palette ──────────────────────────────────────────────
+const BRANCH_COLORS = [
+    { bg: '#dbeafe', fg: '#1e4e8c' },
+    { bg: '#dcfce7', fg: '#166534' },
+    { bg: '#fef9c3', fg: '#854d0e' },
+    { bg: '#fce7f3', fg: '#9d174d' },
+    { bg: '#ede9fe', fg: '#4c1d95' },
+    { bg: '#ffedd5', fg: '#9a3412' },
+];
+const ROOT_STYLE = { bg: '#27251f', fg: '#faf9f6' };
+
+function buildMindMap() {
+    const md = examData && examData.docsMarkdown;
+    if (!md) return;
+
+    const tree = parseMarkdownToTree(md);
+    if (!tree) return;
+
+    const dirs = ['right', 'left'];
+    (tree.children || []).forEach((child, i) => {
+        child._dir = dirs[i % 2];
+        assignColors(child, i % BRANCH_COLORS.length);
+    });
+
+    function toJsNode(node) {
+        const n = { id: node.id, topic: node.topic };
+        if (node.id === 'root') {
+            n['background-color'] = ROOT_STYLE.bg;
+            n['foreground-color'] = ROOT_STYLE.fg;
+        } else if (node._bg) {
+            n['background-color'] = node._bg;
+            n['foreground-color'] = node._fg;
+        }
+        if (node._dir) n.direction = node._dir;
+        if (node.children && node.children.length) n.children = node.children.map(toJsNode);
+        return n;
+    }
+
+    const mindData = {
+        meta: { name: 'theory', author: '', version: '1' },
+        format: 'node_tree',
+        data: toJsNode(tree)
+    };
+
+    if (theoryJm) {
+        try { document.getElementById('theoryMapContainer').innerHTML = ''; } catch(e) {}
+        theoryJm = null;
+    }
+
+    theoryJm = new jsMind({
+        container: 'theoryMapContainer',
+        editable: false,
+        theme: 'default',
+        view: {
+            engine: 'canvas',
+            hmargin: 80, vmargin: 40,
+            line_width: 1.5,
+            line_color: '#d6d0c4',
+            line_style: 'curved',
+            draggable: true,
+            hide_scrollbars_when_draggable: true,
+        },
+        layout: { hspace: 36, vspace: 14, pspace: 14 },
+    });
+    theoryJm.show(mindData);
+
+    // Click leaf nodes → show note panel
+    document.getElementById('theoryMapContainer').addEventListener('click', function(e) {
+        const nodeEl = e.target.closest('jmnode');
+        if (!nodeEl) { closeLeafPanel(); return; }
+        const nodeId = nodeEl.getAttribute('nodeid');
+        if (!nodeId || !theoryJm) return;
+        const node = theoryJm.get_node(nodeId);
+        if (!node) return;
+        const topic = node.topic;
+        const note = leafNoteMap[topic];
+        if (note) {
+            openLeafPanel(note.title, note.bodyHtml);
+        } else {
+            // Non-leaf (branch) nodes: close panel
+            closeLeafPanel();
+        }
+    });
+}
+
+function assignColors(node, colorIdx) {
+    const c = BRANCH_COLORS[colorIdx];
+    node._bg = c.bg; node._fg = c.fg;
+    (node.children || []).forEach(child => assignColors(child, colorIdx));
 }

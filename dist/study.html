@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsmind@0.9.1/style/jsmind.css"/>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@700&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
@@ -183,6 +184,55 @@
             overflow-y: auto;
         }
 
+        /* ── Theory modal: mind map paper style ── */
+        #theoryMapContainer {
+            background: #faf9f6 !important;
+        }
+        #theoryMapContainer .jsmind-inner {
+            background: #faf9f6 !important;
+        }
+        #theoryMapContainer jmnode {
+            font-family: 'DM Sans', sans-serif !important;
+            font-size: 12.5px !important;
+            border-radius: 7px !important;
+            cursor: pointer !important;
+            border: 1px solid #d6d0c4 !important;
+            box-shadow: 0 1px 3px rgba(58,55,49,0.10) !important;
+            transition: box-shadow .15s, border-color .15s !important;
+        }
+        #theoryMapContainer jmnode:hover {
+            box-shadow: 0 2px 8px rgba(45,104,153,0.18) !important;
+            border-color: #7aa3c8 !important;
+        }
+        #theoryMapContainer jmnode.selected {
+            box-shadow: 0 0 0 2px #2d6899 !important;
+            border-color: #2d6899 !important;
+        }
+        #theoryMapContainer jmexpander {
+            border-color: #d6d0c4 !important;
+            background: #f4f2ec !important;
+            color: #8c8679 !important;
+        }
+        /* Docs markdown render */
+        #theoryDocsContent h1 { font-family: 'Noto Serif', Georgia, serif; font-size: 1.35rem; font-weight: 700; color: #27251f; margin-bottom: 0.6rem; margin-top: 1.2rem; }
+        #theoryDocsContent h2 { font-family: 'Noto Serif', Georgia, serif; font-size: 1.1rem; font-weight: 700; color: #3a3731; margin-bottom: 0.4rem; margin-top: 1rem; padding-bottom: 0.3rem; border-bottom: 1px solid #e8e4d9; }
+        #theoryDocsContent h3 { font-size: 0.9rem; font-weight: 600; color: #5e5a52; margin-bottom: 0.3rem; margin-top: 0.8rem; }
+        #theoryDocsContent h4,#theoryDocsContent h5,#theoryDocsContent h6 { font-size: 0.85rem; font-weight: 600; color: #5e5a52; margin-bottom: 0.2rem; margin-top: 0.6rem; }
+        #theoryDocsContent p { font-size: 0.875rem; color: #5e5a52; line-height: 1.75; margin-bottom: 0.5rem; }
+        #theoryDocsContent ul, #theoryDocsContent ol { padding-left: 1.4rem; margin-bottom: 0.5rem; }
+        #theoryDocsContent li { font-size: 0.875rem; color: #5e5a52; line-height: 1.7; }
+        #theoryDocsContent code { background: #f4f2ec; border: 1px solid #e8e4d9; border-radius: 4px; padding: 1px 5px; font-size: 0.8rem; color: #1f5280; }
+        #theoryDocsContent pre { background: #f4f2ec; border: 1px solid #e8e4d9; border-radius: 7px; padding: 0.85rem; overflow-x: auto; margin-bottom: 0.75rem; }
+        #theoryDocsContent blockquote { border-left: 3px solid #7aa3c8; padding-left: 0.9rem; color: #8c8679; font-style: italic; margin-bottom: 0.5rem; }
+        #theoryDocsContent strong { color: #3a3731; font-weight: 600; }
+        #theoryDocsContent a { color: #2d6899; text-decoration: underline; }
+        /* Leaf panel markdown */
+        #leafPanelText p { margin-bottom: 0.5rem; line-height: 1.7; }
+        #leafPanelText strong { color: #3a3731; font-weight: 600; }
+        #leafPanelText code { background: #f4f2ec; border-radius: 4px; padding: 1px 4px; font-size: 0.78rem; color: #1f5280; }
+        #leafPanelText ul { padding-left: 1.2rem; margin-bottom: 0.4rem; }
+        #leafPanelText li { line-height: 1.65; }
+
         /* Learning screen: keep mobile layout (with logo space) up to 1120px.
            Tailwind's md:p-6 (≥768px) would override pt-14, so we restore it here. */
         @media (min-width: 768px) and (max-width: 1119px) {
@@ -351,6 +401,24 @@
                                 </div>
                             </label>
                         </div>
+                    </div>
+                    
+                    <!-- Theory Review trigger button (shown if docs.md exists) -->
+                    <div id="theorySection" class="hidden mb-5">
+                        <button onclick="openTheoryModal()" class="w-full flex items-center gap-3 px-4 py-3 border border-accent-200 bg-accent-50 hover:bg-accent-100 rounded-lg transition-colors group text-left">
+                            <div class="w-8 h-8 bg-white border border-accent-200 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                                <svg class="w-4 h-4 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-semibold text-accent-700">Chưa sẵn sàng? Xem lại lý thuyết</div>
+                                <div class="text-xs text-accent-500 mt-0.5">Sơ đồ tư duy &amp; tài liệu ôn tập</div>
+                            </div>
+                            <svg class="w-4 h-4 text-accent-400 flex-shrink-0 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
                     </div>
                     
                     <!-- Start Button -->
@@ -597,6 +665,83 @@
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- THEORY MODAL (full-window popup) -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div id="theoryModal" class="hidden fixed inset-0 z-[200] flex items-stretch justify-stretch p-4 md:p-6">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-ink-700/40 backdrop-blur-sm" onclick="closeTheoryModal()"></div>
+
+    <!-- Modal card -->
+    <div id="theoryModalCard" class="relative flex flex-col w-full bg-white rounded-2xl shadow-[0_24px_64px_0_rgba(58,55,49,0.22),0_4px_16px_-2px_rgba(58,55,49,0.12)] overflow-hidden" style="animation: theoryModalIn .22s ease both">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-paper-200 flex-shrink-0 bg-paper-50">
+            <div class="flex items-center gap-3">
+                <div class="w-7 h-7 bg-accent-100 border border-accent-200 rounded-lg flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                    </svg>
+                </div>
+                <span class="font-serif font-bold text-ink-600 text-base">Ôn lại lý thuyết</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <!-- View toggle -->
+                <div class="flex items-center bg-paper-100 border border-paper-200 rounded-lg p-0.5 gap-0.5">
+                    <button id="viewMindmapBtn" onclick="switchTheoryView('mindmap')" class="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors bg-white text-accent-600 shadow-sm border border-paper-200">
+                        🗺 Sơ đồ
+                    </button>
+                    <button id="viewDocsBtn" onclick="switchTheoryView('docs')" class="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors text-ink-400 hover:text-ink-500">
+                        📄 Tài liệu
+                    </button>
+                </div>
+                <!-- Close -->
+                <button onclick="closeTheoryModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-ink-400 hover:text-ink-600 hover:bg-paper-100 transition-colors">
+                    <svg class="w-4.5 h-4.5" style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Body: mind map / docs -->
+        <div class="flex-1 relative overflow-hidden">
+
+            <!-- Mind map view -->
+            <div id="theoryMindmapView" class="absolute inset-0">
+                <div id="theoryMapContainer" class="w-full h-full"></div>
+            </div>
+
+            <!-- Docs view -->
+            <div id="theoryDocsView" class="absolute inset-0 hidden overflow-y-auto px-6 py-5">
+                <div id="theoryDocsContent" class="max-w-3xl mx-auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaf note panel (inside modal, absolutely positioned over mind map) -->
+    <div id="theoryLeafPanel" class="hidden absolute top-20 right-8 bottom-8 w-80 max-w-[calc(100vw-2rem)] flex flex-col bg-white border border-paper-200 rounded-xl shadow-[0_8px_24px_0_rgba(58,55,49,0.14)] z-10 overflow-hidden" style="animation: theoryModalIn .18s ease both">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-paper-200 bg-paper-50 flex-shrink-0">
+            <span class="text-xs font-semibold text-ink-300 uppercase tracking-widest">Ghi chú</span>
+            <button onclick="closeLeafPanel()" class="w-6 h-6 flex items-center justify-center rounded-md text-ink-300 hover:text-ink-500 hover:bg-paper-100 transition-colors text-sm leading-none">✕</button>
+        </div>
+        <div class="overflow-y-auto flex-1 px-4 py-4">
+            <h3 id="leafPanelTitle" class="font-serif font-bold text-ink-600 text-base mb-3 leading-snug"></h3>
+            <div id="leafPanelText" class="text-sm text-ink-400 leading-relaxed"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes theoryModalIn {
+    from { opacity: 0; transform: scale(.97) translateY(8px); }
+    to   { opacity: 1; transform: none; }
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.9.1/es6/jsmind.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.9.1/es6/jsmind.draggable-node.js"></script>
 <script src="study.js"></script>
 </body>
 </html>
