@@ -2668,6 +2668,7 @@ async function generateDocs() {
   clearDocsAlert();
   setDocsLoading(true);
 
+  let responseData;
   try {
     const res = await fetch(DOCS_SUPABASE_EDGE_URL, {
       method: 'POST',
@@ -2679,26 +2680,30 @@ async function generateDocs() {
     });
     const data = await res.json();
     if (!res.ok) { showDocsAlert(data?.error || `Lỗi server (${res.status})`); return; }
-
-    _docsMarkdown = data.markdown || '';
-
-    // Push markdown content into Tiptap editor
-    if (window._tiptapEditor) {
-      setTiptapMarkdown(_docsMarkdown);
-    }
-
-    // Show download button
-    document.getElementById('btn-download-docs').classList.remove('hidden');
-
-    showToast('success', 'Tạo tài liệu thành công! Kiểm tra tab "Soạn nội dung" và "Sơ đồ tư duy".');
-
-    // Auto-switch to mindmap preview
-    switchSubTab('mindmap');
+    responseData = data;
   } catch (err) {
+    console.error('[generateDocs] Network/fetch error:', err);
     showDocsAlert('Không thể kết nối server. Kiểm tra mạng và thử lại.');
+    return;
   } finally {
     setDocsLoading(false);
   }
+
+  // Post-processing (outside try/catch so real JS errors surface correctly)
+  _docsMarkdown = responseData.markdown || '';
+
+  // Push markdown content into Tiptap editor
+  if (window._tiptapEditor) {
+    setTiptapMarkdown(_docsMarkdown);
+  }
+
+  // Show download button
+  document.getElementById('btn-download-docs').classList.remove('hidden');
+
+  showToast('success', 'Tạo tài liệu thành công! Kiểm tra tab "Soạn nội dung" và "Sơ đồ tư duy".');
+
+  // Auto-switch to mindmap preview
+  switchSubTab('mindmap');
 }
 
 function setDocsLoading(on) {
