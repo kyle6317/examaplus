@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Soạn đề — Exama Plus</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
   <!-- Tiptap via ESM CDN – used for docs editor -->
@@ -1057,15 +1058,14 @@ async function loadExam(uuid) {
 }
 
 async function parseZip(arrayBuffer) {
-  // Parse exam.json + docs.md from ZIP
+  // Parse exam.json + docs.md + media/ from ZIP using JSZip
   try {
-    const bytes = new Uint8Array(arrayBuffer);
-    const entries = readZipEntries(bytes);
+    const zip = await JSZip.loadAsync(arrayBuffer);
 
-    // ── exam.json ──
-    const examEntry = entries.find(e => e.name === 'exam.json');
-    if (examEntry) {
-      const json = new TextDecoder().decode(examEntry.data);
+    // ── 1. exam.json ──
+    const examFile = zip.file('exam.json');
+    if (examFile) {
+      const json = await examFile.async('string');
       const examData = JSON.parse(json);
       state.groups = examData.groups || [];
       state.groups.forEach(g => {
@@ -1084,12 +1084,11 @@ async function parseZip(arrayBuffer) {
       });
     }
 
-    // ── docs.md → load into Tiptap editor ──
-    const docsEntry = entries.find(e => e.name === 'docs.md');
-    if (docsEntry) {
-      const md = new TextDecoder().decode(docsEntry.data);
+    // ── 2. docs.md → load into Tiptap editor ──
+    const docsFile = zip.file('docs.md');
+    if (docsFile) {
+      const md = await docsFile.async('string');
       _docsMarkdown = md;
-      // Defer until Tiptap is ready
       const trySet = () => {
         if (window._tiptapEditor && typeof setTiptapMarkdown === 'function') {
           setTiptapMarkdown(md);
@@ -1101,9 +1100,55 @@ async function parseZip(arrayBuffer) {
       trySet();
     }
 
-    // Store media blobs (skip for now; media referenced by name)
+    // ── 3. media/ → load tất cả ảnh/audio/video vào state.mediaMap ──
+    const mimeMap = {
+      jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+      gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml',
+      mp3: 'audio/mpeg', ogg: 'audio/ogg', wav: 'audio/wav', m4a: 'audio/mp4',
+      mp4: 'video/mp4', webm: 'video/webm',
+    };
+    const mediaPromises = [];
+    zip.forEach((relativePath, zipEntry) => {
+      if (!zipEntry.dir && relativePath.startsWith('media/')) {
+        const filename = relativePath.slice('media/'.length);
+        if (!filename) return;
+        mediaPromises.push(
+          zipEntry.async('blob').then(blob => {
+            const ext = filename.split('.').pop().toLowerCase();
+            const mime = mimeMap[ext] || 'application/octet-stream';
+            const typedBlob = new Blob([blob], { type: mime });
+            const url = URL.createObjectURL(typedBlob);
+            state.mediaMap.set(filename, { url, blob: typedBlob, mime });
+          })
+        );
+      }
+    });
+    await Promise.all(mediaPromises);
+
+    // ── 4. Gán _blob URL vào các media reference trong state.groups ──
+    function resolveMedia(mediaArr) {
+      if (!Array.isArray(mediaArr)) return;
+      mediaArr.forEach(m => {
+        if (m.src && state.mediaMap.has(m.src)) {
+          m._blob = state.mediaMap.get(m.src).url;
+          if (!m.type) {
+            const mime = state.mediaMap.get(m.src).mime || '';
+            m.type = mime.startsWith('image') ? 'image' : mime.startsWith('audio') ? 'audio' : 'video';
+          }
+        }
+      });
+    }
+    state.groups.forEach(g => {
+      resolveMedia(g.context_media);
+      (g.questions || []).forEach(q => {
+        resolveMedia(q.prompt_media);
+        (q.choices || []).forEach(c => resolveMedia(c.media));
+      });
+    });
+
   } catch (e) {
-    console.warn('ZIP parse error:', e);
+    console.error('ZIP parse error:', e);
+    throw e;
   }
 }
 
@@ -1203,18 +1248,49 @@ async function saveExam() {
 
     // Build exam.json
     const examJson = buildExamJson();
-    const jsonBytes = new TextEncoder().encode(JSON.stringify(examJson, null, 2));
 
     // Build docs.md if tiptap has content
     const docsMarkdown = getTiptapMarkdown ? getTiptapMarkdown() : '';
-    const docsBytes = docsMarkdown.trim()
-      ? new TextEncoder().encode(docsMarkdown)
-      : null;
 
-    // Build ZIP (store method, no compression) — exam.json + optional docs.md
-    const zipEntries = [{ name: 'exam.json', data: jsonBytes }];
-    if (docsBytes) zipEntries.push({ name: 'docs.md', data: docsBytes });
-    const zipBytes = buildZip(zipEntries);
+    // Build ZIP bằng JSZip — exam.json + docs.md + tất cả media
+    const zip = new JSZip();
+    zip.file('exam.json', JSON.stringify(examJson, null, 2));
+    if (docsMarkdown.trim()) zip.file('docs.md', docsMarkdown);
+
+    // Tập hợp tất cả media cần đưa vào thư mục media/
+    const mediaToAdd = new Map(); // filename → Blob
+
+    // Nguồn 1: state.mediaMap (import từ DOCX hoặc ZIP)
+    if (state.mediaMap && state.mediaMap.size > 0) {
+      for (const [filename, mediaData] of state.mediaMap.entries()) {
+        mediaToAdd.set(filename, mediaData.blob);
+      }
+    }
+    // Nguồn 2: media upload trực tiếp qua "Đính kèm media" (_file còn trên object)
+    function collectInlineMedia(mediaArr) {
+      if (!Array.isArray(mediaArr)) return;
+      mediaArr.forEach(m => {
+        if (m._file && m.src && !mediaToAdd.has(m.src)) {
+          mediaToAdd.set(m.src, m._file);
+        }
+      });
+    }
+    state.groups.forEach(g => {
+      collectInlineMedia(g.context_media);
+      (g.questions || []).forEach(q => {
+        collectInlineMedia(q.prompt_media);
+        (q.choices || []).forEach(c => collectInlineMedia(c.media));
+      });
+    });
+
+    if (mediaToAdd.size > 0) {
+      const mediaFolder = zip.folder('media');
+      for (const [filename, blob] of mediaToAdd.entries()) {
+        mediaFolder.file(filename, blob);
+      }
+    }
+
+    const zipBytes = await zip.generateAsync({ type: 'uint8array' });
 
     // Upload ZIP to storage
     const zipPath = `${state.userId}/${examId}.zip`;
@@ -1247,21 +1323,26 @@ async function saveExam() {
 }
 
 function buildExamJson() {
+  // Serialize media array — chỉ giữ { type, src, alt }, bỏ _blob/_file
+  function serializeMedia(mediaArr) {
+    if (!Array.isArray(mediaArr)) return [];
+    return mediaArr.map(m => ({ type: m.type, src: m.src, alt: m.alt || '' }));
+  }
   return {
     groups: state.groups.map(g => ({
       id: g.id,
       label: g.label || '',
       context: g.context || '',
-      context_media: [],
+      context_media: serializeMedia(g.context_media),
       questions: (g.questions || []).map(q => ({
         id: q.id,
         type: q.type,
         prompt: q.prompt || '',
-        prompt_media: [],
+        prompt_media: serializeMedia(q.prompt_media),
         choices: (q.choices || []).map(c => ({
           id: c.id,
           text: c.text || '',
-          media: []
+          media: serializeMedia(c.media)
         })),
         answer: q.answer ?? ''
       }))
@@ -1677,11 +1758,9 @@ function renderMediaZone(fieldKey, mediaArr) {
   const existingItems = (mediaArr || []).map((m, mi) => {
     if (m.type === 'image') {
       // Nếu src là tên file (từ DOCX import), lấy object URL từ mediaMap
-      let imgSrc = m.src;
-      if (state.mediaMap && state.mediaMap.has(m.src)) {
-        const mediaData = state.mediaMap.get(m.src);
-        imgSrc = mediaData.url;
-      }
+      const imgSrc = m._blob
+        || (state.mediaMap && state.mediaMap.has(m.src) ? state.mediaMap.get(m.src).url : null)
+        || m.src;
       return `<div class="media-item">
         <img src="${escHtml(imgSrc)}" alt="${escHtml(m.alt||'')}">
         <button class="remove-btn" onclick="removeMedia('${fieldKey}', ${mi})" title="Xóa">×</button>
@@ -2170,17 +2249,6 @@ async function handleZipFile(file) {
   `;
 
   try {
-    // Load JSZip nếu chưa có
-    if (!window.JSZip) {
-      await new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-        script.onload = resolve;
-        script.onerror = () => reject(new Error('Không thể tải thư viện JSZip.'));
-        document.head.appendChild(script);
-      });
-    }
-
     // Đọc ZIP
     const arrayBuffer = await file.arrayBuffer();
     const zip = await JSZip.loadAsync(arrayBuffer);
@@ -2311,17 +2379,6 @@ async function handleZipFile(file) {
 
 async function downloadExamZip() {
   try {
-    // Import JSZip dynamically
-    if (!window.JSZip) {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-      document.head.appendChild(script);
-      await new Promise((resolve, reject) => {
-        script.onload = resolve;
-        script.onerror = reject;
-      });
-    }
-
     const zip = new JSZip();
     
     // Add exam.json
