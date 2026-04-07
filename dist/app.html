@@ -563,7 +563,7 @@
     }
 
     if (action === 'copy') {
-      const link = `https://examaplus.pages.devstudy?uuid=${uuid}`;
+      const link = `https://examaplus.pages.dev/study?uuid=${uuid}`;
       try {
         await navigator.clipboard.writeText(link);
         showToast('Đã sao chép link làm bài.', 'success');
