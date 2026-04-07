@@ -1,14 +1,13 @@
 /**
  * mind-map.js
  * Module khởi tạo và render sơ đồ tư duy từ Markdown (dùng jsMind)
- * Logic render đồng bộ với study.js (chuẩn)
  *
  * Export:
  *   renderMindMap(containerId, markdown) → Promise<{ jm, notes }>
  *   destroyMindMap(instance) → void
  */
 
-// ── Paper color palette (giống study.js) ─────────────────────────────────────
+// ── Paper color palette ───────────────────────────────────────────────────────
 const BRANCH_COLORS = [
   { bg: '#dbeafe', fg: '#1e4e8c' },
   { bg: '#dcfce7', fg: '#166534' },
@@ -19,7 +18,7 @@ const BRANCH_COLORS = [
 ];
 const ROOT_STYLE = { bg: '#27251f', fg: '#faf9f6' };
 
-// ── Parse Markdown headings into tree (giống study.js) ───────────────────────
+// ── Parse Markdown headings into tree ─────────────────────────────────────────
 function parseMarkdownToTree(md) {
   const lines = md.split('\n');
   const headings = [];
@@ -45,7 +44,7 @@ function parseMarkdownToTree(md) {
   return rootNode;
 }
 
-// ── Parse leaf notes from markdown (giống study.js) ──────────────────────────
+// ── Parse leaf notes from markdown ───────────────────────────────────────────
 function parseLeafNotes(md) {
   const map = {};
   const lines = md.split('\n');
@@ -65,9 +64,7 @@ function parseLeafNotes(md) {
 
   sections.forEach(sec => {
     const body = sec.bodyLines.join('\n').trim();
-    if (body) {
-      map[sec.title] = { title: sec.title, text: body };
-    }
+    if (body) map[sec.title] = { title: sec.title, text: body };
   });
   return map;
 }
@@ -79,7 +76,116 @@ function assignColors(node, colorIdx) {
   (node.children || []).forEach(child => assignColors(child, colorIdx));
 }
 
-// ── Render mind map (config giống study.js) ──────────────────────────────────
+// ── Touch support: pan bằng scroll, pinch-to-zoom ────────────────────────────
+/**
+ * Tại sao lần trước không hoạt động:
+ *   - jsMind pan KHÔNG dùng mousemove để move element — nó dùng e_panel.scrollBy()
+ *   - Dispatch MouseEvent giả sang container KHÔNG trigger được scrollBy vì
+ *     handler của jsMind bind vào closure riêng, không phải DOM event chain chuẩn.
+ *
+ * Cách đúng:
+ *   1. Tìm e_panel (div.jsmind-inner) — đây là scrollable container thật
+ *   2. Pan = gọi trực tiếp ePanel.scrollBy(dx, dy)
+ *   3. Pinch = gọi jm.view.set_zoom() trực tiếp
+ *   4. Tap ngắn = dispatch mousedown + click để jsMind select/click node
+ */
+function installTouchSupport(container, jm) {
+  const ePanel = container.querySelector('.jsmind-inner');
+  if (!ePanel) return;
+
+  let startX = 0, startY = 0;
+  let lastX = 0, lastY = 0;
+  let startDist = 0;
+  let isPinching = false;
+  let isDragging = false;
+  let tapTarget = null;
+  let tapTime = 0;
+  const TAP_MOVE_LIMIT = 8;   // px — di chuyển ít hơn mức này = tap
+  const TAP_TIME_LIMIT = 250; // ms
+
+  function touchDist(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  container.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      isPinching = false;
+      isDragging = true;
+      startX = lastX = e.touches[0].clientX;
+      startY = lastY = e.touches[0].clientY;
+      tapTarget = e.target;
+      tapTime = Date.now();
+
+      // Dispatch mousedown để jsMind nhận biết node được chạm vào
+      tapTarget.dispatchEvent(new MouseEvent('mousedown', {
+        bubbles: true, cancelable: true,
+        clientX: startX, clientY: startY,
+      }));
+
+    } else if (e.touches.length === 2) {
+      isDragging = false;
+      isPinching = true;
+      startDist = touchDist(e.touches);
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  container.addEventListener('touchmove', (e) => {
+    if (isPinching && e.touches.length === 2) {
+      e.preventDefault();
+      const dist = touchDist(e.touches);
+      if (startDist > 0) {
+        const ratio = dist / startDist;
+        const newZoom = jm.view.zoom_current * ratio;
+        jm.view.set_zoom(newZoom);
+      }
+      startDist = touchDist(e.touches);
+
+    } else if (isDragging && e.touches.length === 1) {
+      const cx = e.touches[0].clientX;
+      const cy = e.touches[0].clientY;
+      const totalMoved = Math.abs(cx - startX) + Math.abs(cy - startY);
+
+      if (totalMoved > TAP_MOVE_LIMIT) {
+        // Đã xác định là drag — ngăn scroll trang
+        e.preventDefault();
+        // Scroll e_panel trực tiếp — đây là cách jsMind pan thật sự hoạt động
+        ePanel.scrollBy(lastX - cx, lastY - cy);
+      }
+
+      lastX = cx;
+      lastY = cy;
+    }
+  }, { passive: false });
+
+  container.addEventListener('touchend', (e) => {
+    if (isDragging) {
+      const moved = Math.abs(lastX - startX) + Math.abs(lastY - startY);
+      const elapsed = Date.now() - tapTime;
+
+      if (moved < TAP_MOVE_LIMIT && elapsed < TAP_TIME_LIMIT && tapTarget) {
+        // Tap ngắn → dispatch click để jsMind xử lý click node / expander
+        tapTarget.dispatchEvent(new MouseEvent('click', {
+          bubbles: true, cancelable: true,
+          clientX: lastX, clientY: lastY,
+        }));
+      }
+    }
+    isDragging = false;
+    isPinching = false;
+    startDist = 0;
+  }, { passive: true });
+
+  container.addEventListener('touchcancel', () => {
+    isDragging = false;
+    isPinching = false;
+    startDist = 0;
+  }, { passive: true });
+}
+
+// ── Render mind map ───────────────────────────────────────────────────────────
 export async function renderMindMap(containerId, markdown) {
   if (typeof jsMind === 'undefined') await loadJsMind();
 
@@ -114,7 +220,6 @@ export async function renderMindMap(containerId, markdown) {
     data: toJsNode(tree)
   };
 
-  // Destroy any existing jsMind in this container
   const container = document.getElementById(containerId);
   if (container) container.innerHTML = '';
 
@@ -136,15 +241,21 @@ export async function renderMindMap(containerId, markdown) {
   });
 
   jm.show(mindData);
+
+  // Gắn touch support sau khi jsMind đã render xong DOM
+  requestAnimationFrame(() => {
+    if (container) installTouchSupport(container, jm);
+  });
+
   return { jm, notes };
 }
 
-// ── Destroy ──────────────────────────────────────────────────────────────────
+// ── Destroy ───────────────────────────────────────────────────────────────────
 export function destroyMindMap(instance) {
   try { instance?.jm?.destroy?.(); } catch (_) {}
 }
 
-// ── Lazy-load jsMind + draggable from CDN ────────────────────────────────────
+// ── Lazy-load jsMind + draggable from CDN ─────────────────────────────────────
 let _jsMindLoaded = false;
 function loadJsMind() {
   if (_jsMindLoaded) return Promise.resolve();
