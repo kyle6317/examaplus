@@ -1870,6 +1870,12 @@ function buildMindMap() {
     });
     theoryJm.show(mindData);
 
+    // Gắn touch support cho mobile (pan + pinch zoom)
+    requestAnimationFrame(() => {
+        const _container = document.getElementById('theoryMapContainer');
+        if (_container) installMindMapTouch(_container, theoryJm);
+    });
+
     // Click leaf nodes → show note panel
     document.getElementById('theoryMapContainer').addEventListener('click', function(e) {
         const nodeEl = e.target.closest('jmnode');
@@ -1893,4 +1899,87 @@ function assignColors(node, colorIdx) {
     const c = BRANCH_COLORS[colorIdx];
     node._bg = c.bg; node._fg = c.fg;
     (node.children || []).forEach(child => assignColors(child, colorIdx));
+}
+// ── Touch support cho mind map trên mobile ────────────────────────────────────
+// jsMind pan bằng e_panel.scrollBy() — không phải mouse events.
+// Cần scroll trực tiếp vào div.jsmind-inner và gọi jm.view.set_zoom() cho pinch.
+function installMindMapTouch(container, jm) {
+    const ePanel = container.querySelector('.jsmind-inner');
+    if (!ePanel) return;
+
+    let startX = 0, startY = 0, lastX = 0, lastY = 0;
+    let startDist = 0;
+    let isPinching = false, isDragging = false;
+    let tapTarget = null, tapTime = 0;
+    const TAP_MOVE_LIMIT = 8;   // px
+    const TAP_TIME_LIMIT = 250; // ms
+
+    function touchDist(touches) {
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    container.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+            isPinching = false;
+            isDragging = true;
+            startX = lastX = e.touches[0].clientX;
+            startY = lastY = e.touches[0].clientY;
+            tapTarget = e.target;
+            tapTime = Date.now();
+            // Dispatch mousedown để jsMind nhận node được chạm
+            tapTarget.dispatchEvent(new MouseEvent('mousedown', {
+                bubbles: true, cancelable: true,
+                clientX: startX, clientY: startY,
+            }));
+        } else if (e.touches.length === 2) {
+            isDragging = false;
+            isPinching = true;
+            startDist = touchDist(e.touches);
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    container.addEventListener('touchmove', (e) => {
+        if (isPinching && e.touches.length === 2) {
+            e.preventDefault();
+            const dist = touchDist(e.touches);
+            if (startDist > 0) {
+                jm.view.set_zoom(jm.view.zoom_current * (dist / startDist));
+            }
+            startDist = touchDist(e.touches);
+        } else if (isDragging && e.touches.length === 1) {
+            const cx = e.touches[0].clientX;
+            const cy = e.touches[0].clientY;
+            if (Math.abs(cx - startX) + Math.abs(cy - startY) > TAP_MOVE_LIMIT) {
+                e.preventDefault();
+                ePanel.scrollBy(lastX - cx, lastY - cy);
+            }
+            lastX = cx;
+            lastY = cy;
+        }
+    }, { passive: false });
+
+    container.addEventListener('touchend', (e) => {
+        if (isDragging) {
+            const moved = Math.abs(lastX - startX) + Math.abs(lastY - startY);
+            const elapsed = Date.now() - tapTime;
+            if (moved < TAP_MOVE_LIMIT && elapsed < TAP_TIME_LIMIT && tapTarget) {
+                tapTarget.dispatchEvent(new MouseEvent('click', {
+                    bubbles: true, cancelable: true,
+                    clientX: lastX, clientY: lastY,
+                }));
+            }
+        }
+        isDragging = false;
+        isPinching = false;
+        startDist = 0;
+    }, { passive: true });
+
+    container.addEventListener('touchcancel', () => {
+        isDragging = false;
+        isPinching = false;
+        startDist = 0;
+    }, { passive: true });
 }
