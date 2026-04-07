@@ -2698,7 +2698,7 @@ async function generateDocs() {
   }
 
   // Show download button
-  document.getElementById('btn-download-docs').classList.remove('hidden');
+  document.getElementById('btn-download-docs')?.classList.remove('hidden');
 
   showToast('success', 'Tạo tài liệu thành công! Kiểm tra tab "Soạn nội dung" và "Sơ đồ tư duy".');
 
