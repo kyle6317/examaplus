@@ -1,8 +1,8 @@
-# Exama Lite
+# Exama PLus
 
-**Exama Lite** là một nền tảng nhỏ hỗ trợ tạo và làm đề ôn tập cá nhân. Dự án ra đời nhằm cung cấp một phương án thay thế đơn giản, không quảng cáo và dễ tiếp cận cho học sinh trong các kỳ thi, khi mà các nền tảng hiện có thường quá phức tạp hoặc bị giới hạn tính năng.
+**Exama Plus** là phiên bản nâng cấp từ Exama Plus, tích hợp AI giúp tạo đề, tóm tắt lý thuyết và vẽ sơ đồ tư duy tự động. Bạn có thể soạn đề, chia sẻ link và luyện tập ngay chỉ với một email.
 
-**Trải nghiệm tại:** [examalite.pages.dev](https://examalite.pages.dev/)
+**Trải nghiệm tại:** [examaplus.pages.dev](https://examaplus.pages.dev/)
 
 ---
 
@@ -48,4 +48,4 @@ Dự án ưu tiên sự tối giản trong mã nguồn để dễ dàng bảo tr
 
 ---
 
-*Hy vọng Exama Lite sẽ giúp ích phần nào cho các bạn trong mùa thi cử.*
+*Hy vọng Exama Plus sẽ giúp ích phần nào cho các bạn trong mùa thi cử.*
