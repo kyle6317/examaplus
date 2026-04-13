@@ -45,7 +45,7 @@ Dự án ưu tiên sự tối giản trong mã nguồn để dễ dàng bảo tr
 
 * **Tác giả:** Nguyen Huu Hoa ([nguyenhuuhoa@proton.me](mailto:nguyenhuuhoa@proton.me))
 * **Giấy phép:** MIT
-
+* Repo: [https://github.com/kyle6317/examaplus](https://github.com/kyle6317/examaplus)
 ---
 
 *Hy vọng Exama Plus sẽ giúp ích phần nào cho các bạn trong mùa thi cử.*
