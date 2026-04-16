@@ -1,3 +1,7 @@
+-- Copyright (c) 2026 Hữu Hoà <nguyenhuuhoa@proton.me>
+-- SPDX-License-Identifier: MIT
+-- Derived from: https://github.com/kyle6317/examaplus
+
 -- ==================== BẢNG EXAMS ====================
 CREATE TABLE exams (
   id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),

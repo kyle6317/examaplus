@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Hữu Hoà <nguyenhuuhoa@proton.me>
+// SPDX-License-Identifier: MIT
+// Derived from: https://github.com/kyle6317/examaplus
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const GEMINI_MODEL = "gemini-2.5-flash-lite";

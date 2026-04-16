@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+
+# Copyright (c) 2026 Hữu Hoà <nguyenhuuhoa@proton.me>
+# SPDX-License-Identifier: MIT
+# Derived from: https://github.com/kyle6317/examaplus
 from pathlib import Path
 import shutil
 import sys
