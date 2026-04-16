@@ -38,6 +38,9 @@ Dự án ưu tiên sự tối giản trong mã nguồn để dễ dàng bảo tr
 * Nơi lưu trữ và quản lý các đề thi đã tạo.
 * Cho phép chỉnh sửa hoặc lấy link chia sẻ bài thi cho người khác làm mà không cần đăng nhập.
 
+### 4. Soạn lý thuyết và sơ đồ tư duy
+* Tự động soạn lý thuyết ôn tập dựa trên file được tải lên
+* Chuyển đổi lý thuyết thành sơ đồ tư duy trực quan
 ---
 
 
